@@ -90,17 +90,7 @@ npm run build
 
 vercel.com
 
-# 1. 进前端目录重新打包
-cd frontend
-npm run build
 
-# 2. 退回大目录
-cd ..
-
-# 3. 提交代码
 git add .
-git commit -m "修复：移除缺失的横屏图标，使用原生Emoji"
-
-# 4. 暴力部署
-git subtree push --prefix frontend/dist origin gh-pages
-
+git commit -m "xx"
+git push origin main -f

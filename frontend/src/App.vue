@@ -1,10 +1,11 @@
 <template>
   <div class="app-container">
     
-    <div class="portrait-overlay">
+    <div class="portrait-overlay" v-if="isPortrait && !forceLandscape" @click="forceLandscape = true">
       <div class="portrait-content">
         <div class="rotate-icon">📱</div>
         <p>为获得最佳体验<br/>请将手机<span style="color:#ffd700">横屏</span>放置</p>
+        <p class="click-to-enter">(或点击屏幕强制进入游戏)</p>
       </div>
     </div>
 
@@ -136,13 +137,34 @@
 </template>
 
 <script setup>
-import { reactive, onMounted } from 'vue';
+import { reactive, onMounted, ref, onUnmounted } from 'vue';
 import { initTiles } from './utils/mjLogic.js';
 import { calculateWang } from './core/constants.js';
 import { HuCalculator } from './core/HuCalculator.js';
 import { RuleChecker } from './core/RuleChecker.js';
 
-// 【核心解法】：统一从 vite.config.js 获取 base 路径，完美解决报错与白屏！
+// --- 【核心解法】JS 物理级强制判断横竖屏 ---
+const forceLandscape = ref(false); // 手动点击强关遮罩的开关
+const isPortrait = ref(false);     // 默认状态，由 mounted 后的真实宽高度决定
+
+const checkOrientation = () => {
+  // 只要物理屏幕高度 > 宽度，就判定为竖屏！彻底抛弃 CSS 的软弱判定！
+  isPortrait.value = window.innerHeight > window.innerWidth;
+};
+
+// 全局监听屏幕大小变化和旋转
+onMounted(() => {
+  checkOrientation(); 
+  window.addEventListener('resize', checkOrientation);
+  window.addEventListener('orientationchange', checkOrientation);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkOrientation);
+  window.removeEventListener('orientationchange', checkOrientation);
+});
+// ------------------------------------------
+
 const getImg = (path) => {
   return `${import.meta.env.BASE_URL}images/${path}`;
 };
@@ -480,14 +502,16 @@ const nextTurn = () => {
   background-color: #215c32; overflow: hidden; box-shadow: 0 0 5vw #000; color: white; border: 0.5vw solid #1a472a; border-radius: 1vw; z-index: 10;
 }
 
+/* 竖屏提示遮罩 (去掉了 display: none，交由 JS 的 v-if 彻底控制) */
 .portrait-overlay {
   position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95);
-  z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; pointer-events: auto;
+  z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; pointer-events: auto;
 }
 
 .portrait-content { display: flex; flex-direction: column; align-items: center; gap: 20px; }
 .rotate-icon { font-size: 80px; animation: rotateScreen 2s infinite ease-in-out; }
 .portrait-overlay p { font-size: 20px; line-height: 1.6; font-weight: bold; }
+.click-to-enter { font-size: 14px !important; color: #aaa; margin-top: 15px; animation: pulseText 1.5s infinite; font-weight: normal !important;}
 
 @keyframes rotateScreen {
   0% { transform: rotate(0deg); }
@@ -496,9 +520,13 @@ const nextTurn = () => {
   100% { transform: rotate(0deg); }
 }
 
-@media (orientation: portrait) {
-  .portrait-overlay { display: flex; }
+@keyframes pulseText {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
 }
+
+/* 彻底删除 @media (orientation: portrait) 避免浏览器干预 */
 
 .ready-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 999; }
 .ready-players { display: flex; gap: 4vw; margin: 3vw 0; }
