@@ -8,7 +8,7 @@
           <h2>等待玩家准备</h2>
           <div class="ready-players">
             <div class="ready-player" v-for="(player, index) in gameState.players" :key="index">
-               <img :src="`/TJMJ/images/avatars/${player.avatar}.png`" class="ready-avatar" :class="{'is-ready': gameState.readyStatus[index]}" />
+               <img :src="getImg(`avatars/${player.avatar}.png`)" class="ready-avatar" :class="{'is-ready': gameState.readyStatus[index]}" />
                <p>{{ player.name }}</p>
                <span v-if="gameState.readyStatus[index]" class="ready-badge">已准备</span>
             </div>
@@ -17,32 +17,32 @@
         </div>
 
         <div class="walls-container" v-show="gameState.gamePhase === 'PLAYING' || gameState.gamePhase === 'SETTLEMENT'">
-          <div class="wall wall-top"><div v-for="n in 14" :key="'top'+n" class="wall-stack-wrapper h-stack"><img v-if="gameState.wallTiles[(27 + n - 1) * 2 + 1]" src="/TJMJ/images/3d/back_3.png" class="stack-bottom h-bg" /><img v-if="gameState.wallTiles[(27 + n - 1) * 2]" src="/TJMJ/images/3d/back_3.png" class="stack-top h-bg" /><img v-if="gameState.diIndex === (27 + n - 1) * 2" :src="`/TJMJ/images/tiles/${gameState.diTile}.png`" class="stack-top di-face h-face" /></div></div>
-          <div class="wall wall-left"><div v-for="n in 13" :key="'left'+n" class="wall-stack-wrapper v-stack"><img v-if="gameState.wallTiles[(26 - (n - 1)) * 2 + 1]" src="/TJMJ/images/3d/back_4.png" class="stack-bottom v-bg" /><img v-if="gameState.wallTiles[(26 - (n - 1)) * 2]" src="/TJMJ/images/3d/back_4.png" class="stack-top v-bg" /><img v-if="gameState.diIndex === (26 - (n - 1)) * 2" :src="`/TJMJ/images/tiles/${gameState.diTile}.png`" class="stack-top di-face v-face" /></div></div>
-          <div class="wall wall-right"><div v-for="n in 13" :key="'right'+n" class="wall-stack-wrapper v-stack"><img v-if="gameState.wallTiles[(41 + n - 1) * 2 + 1]" src="/TJMJ/images/3d/back_2.png" class="stack-bottom v-bg" /><img v-if="gameState.wallTiles[(41 + n - 1) * 2]" src="/TJMJ/images/3d/back_2.png" class="stack-top v-bg" /><img v-if="gameState.diIndex === (41 + n - 1) * 2" :src="`/TJMJ/images/tiles/${gameState.diTile}.png`" class="stack-top di-face v-face" /></div></div>
-          <div class="wall wall-bottom"><div v-for="n in 14" :key="'bottom'+n" class="wall-stack-wrapper h-stack"><img v-if="gameState.wallTiles[(13 - (n - 1)) * 2 + 1]" src="/TJMJ/images/3d/back_1.png" class="stack-bottom h-bg" /><img v-if="gameState.wallTiles[(13 - (n - 1)) * 2]" src="/TJMJ/images/3d/back_1.png" class="stack-top h-bg" /><img v-if="gameState.diIndex === (13 - (n - 1)) * 2" :src="`/TJMJ/images/tiles/${gameState.diTile}.png`" class="stack-top di-face h-face" /></div></div>
+          <div class="wall wall-top"><div v-for="n in 14" :key="'top'+n" class="wall-stack-wrapper h-stack"><img v-if="gameState.wallTiles[(27 + n - 1) * 2 + 1]" :src="getImg('3d/back_3.png')" class="stack-bottom h-bg" /><img v-if="gameState.wallTiles[(27 + n - 1) * 2]" :src="getImg('3d/back_3.png')" class="stack-top h-bg" /><img v-if="gameState.diIndex === (27 + n - 1) * 2" :src="getImg(`tiles/${gameState.diTile}.png`)" class="stack-top di-face h-face" /></div></div>
+          <div class="wall wall-left"><div v-for="n in 13" :key="'left'+n" class="wall-stack-wrapper v-stack"><img v-if="gameState.wallTiles[(26 - (n - 1)) * 2 + 1]" :src="getImg('3d/back_4.png')" class="stack-bottom v-bg" /><img v-if="gameState.wallTiles[(26 - (n - 1)) * 2]" :src="getImg('3d/back_4.png')" class="stack-top v-bg" /><img v-if="gameState.diIndex === (26 - (n - 1)) * 2" :src="getImg(`tiles/${gameState.diTile}.png`)" class="stack-top di-face v-face" /></div></div>
+          <div class="wall wall-right"><div v-for="n in 13" :key="'right'+n" class="wall-stack-wrapper v-stack"><img v-if="gameState.wallTiles[(41 + n - 1) * 2 + 1]" :src="getImg('3d/back_2.png')" class="stack-bottom v-bg" /><img v-if="gameState.wallTiles[(41 + n - 1) * 2]" :src="getImg('3d/back_2.png')" class="stack-top v-bg" /><img v-if="gameState.diIndex === (41 + n - 1) * 2" :src="getImg(`tiles/${gameState.diTile}.png`)" class="stack-top di-face v-face" /></div></div>
+          <div class="wall wall-bottom"><div v-for="n in 14" :key="'bottom'+n" class="wall-stack-wrapper h-stack"><img v-if="gameState.wallTiles[(13 - (n - 1)) * 2 + 1]" :src="getImg('3d/back_1.png')" class="stack-bottom h-bg" /><img v-if="gameState.wallTiles[(13 - (n - 1)) * 2]" :src="getImg('3d/back_1.png')" class="stack-top h-bg" /><img v-if="gameState.diIndex === (13 - (n - 1)) * 2" :src="getImg(`tiles/${gameState.diTile}.png`)" class="stack-top di-face h-face" /></div></div>
         </div>
 
         <div class="player-top">
           <div class="avatar-box" :class="{ 'active-glow': gameState.currentPlayerIndex === 2 }">
-            <img :src="`/TJMJ/images/avatars/${gameState.players[2].avatar}.png`" class="avatar-img" />
+            <img :src="getImg(`avatars/${gameState.players[2].avatar}.png`)" class="avatar-img" />
             <span class="name">对家</span>
             <span class="score" :class="gameState.players[2].score >= 0 ? 'score-up' : 'score-down'">{{ gameState.players[2].score >= 0 ? '+' : '' }}{{ gameState.players[2].score }}</span>
           </div>
           <div class="cards-container-top">
              <div class="npc-exposed top-exposed" v-if="gameState.exposed[2].length > 0">
                 <div v-for="(t, i) in getFlatExposed(2)" :key="i" class="rotator-top">
-                    <img src="/TJMJ/images/3d/lay_1.png" class="center-tile-bg" />
-                    <img :src="`/TJMJ/images/tiles/${t}.png`" class="center-tile-face" />
+                    <img :src="getImg('3d/lay_1.png')" class="center-tile-bg" />
+                    <img :src="getImg(`tiles/${t}.png`)" class="center-tile-face" />
                 </div>
              </div>
-             <div class="hand-tiles-top"><img v-for="n in gameState.npcTileCounts[2]" :key="n" src="/TJMJ/images/3d/hand_3.png" class="tile-back-top" /></div>
+             <div class="hand-tiles-top"><img v-for="n in gameState.npcTileCounts[2]" :key="n" :src="getImg('3d/hand_3.png')" class="tile-back-top" /></div>
           </div>
         </div>
         
         <div class="player-left">
           <div class="avatar-box" :class="{ 'active-glow': gameState.currentPlayerIndex === 3 }">
-            <img :src="`/TJMJ/images/avatars/${gameState.players[3].avatar}.png`" class="avatar-img" />
+            <img :src="getImg(`avatars/${gameState.players[3].avatar}.png`)" class="avatar-img" />
             <span class="name">上家</span>
             <span class="score" :class="gameState.players[3].score >= 0 ? 'score-up' : 'score-down'">{{ gameState.players[3].score >= 0 ? '+' : '' }}{{ gameState.players[3].score }}</span>
           </div>
@@ -50,29 +50,29 @@
              <div class="npc-exposed left-exposed" v-if="gameState.exposed[3].length > 0">
                 <div v-for="(t, i) in getFlatExposed(3)" :key="i" class="npc-exposed-wrapper-side">
                     <div class="rotator rotator-left">
-                       <img src="/TJMJ/images/3d/lay_1.png" class="center-tile-bg" />
-                       <img :src="`/TJMJ/images/tiles/${t}.png`" class="center-tile-face" />
+                       <img :src="getImg('3d/lay_1.png')" class="center-tile-bg" />
+                       <img :src="getImg(`tiles/${t}.png`)" class="center-tile-face" />
                     </div>
                 </div>
              </div>
-             <div class="hand-tiles-left"><img v-for="n in gameState.npcTileCounts[3]" :key="n" src="/TJMJ/images/3d/hand_4.png" class="tile-back-side" /></div>
+             <div class="hand-tiles-left"><img v-for="n in gameState.npcTileCounts[3]" :key="n" :src="getImg('3d/hand_4.png')" class="tile-back-side" /></div>
           </div>
         </div>
         
         <div class="player-right">
           <div class="cards-container-side">
-             <div class="hand-tiles-right"><img v-for="n in gameState.npcTileCounts[1]" :key="n" src="/TJMJ/images/3d/hand_2.png" class="tile-back-side" /></div>
+             <div class="hand-tiles-right"><img v-for="n in gameState.npcTileCounts[1]" :key="n" :src="getImg('3d/hand_2.png')" class="tile-back-side" /></div>
              <div class="npc-exposed right-exposed" v-if="gameState.exposed[1].length > 0">
                 <div v-for="(t, i) in getFlatExposed(1)" :key="i" class="npc-exposed-wrapper-side">
                     <div class="rotator rotator-right">
-                       <img src="/TJMJ/images/3d/lay_1.png" class="center-tile-bg" />
-                       <img :src="`/TJMJ/images/tiles/${t}.png`" class="center-tile-face" />
+                       <img :src="getImg('3d/lay_1.png')" class="center-tile-bg" />
+                       <img :src="getImg(`tiles/${t}.png`)" class="center-tile-face" />
                     </div>
                 </div>
              </div>
           </div>
           <div class="avatar-box" :class="{ 'active-glow': gameState.currentPlayerIndex === 1 }">
-            <img :src="`/TJMJ/images/avatars/${gameState.players[1].avatar}.png`" class="avatar-img" />
+            <img :src="getImg(`avatars/${gameState.players[1].avatar}.png`)" class="avatar-img" />
             <span class="name">下家</span>
             <span class="score" :class="gameState.players[1].score >= 0 ? 'score-up' : 'score-down'">{{ gameState.players[1].score >= 0 ? '+' : '' }}{{ gameState.players[1].score }}</span>
           </div>
@@ -80,7 +80,7 @@
 
         <div class="player-bottom">
           <div class="avatar-box" :class="{ 'active-glow': gameState.currentPlayerIndex === 0 }">
-            <img :src="`/TJMJ/images/avatars/${gameState.players[0].avatar}.png`" class="avatar-img" />
+            <img :src="getImg(`avatars/${gameState.players[0].avatar}.png`)" class="avatar-img" />
             <span class="name">我</span>
             <span class="score" :class="gameState.players[0].score >= 0 ? 'score-up' : 'score-down'">{{ gameState.players[0].score >= 0 ? '+' : '' }}{{ gameState.players[0].score }}</span>
           </div>
@@ -89,30 +89,30 @@
             <div class="exposed-area" v-if="gameState.exposed[0].length > 0">
                <div v-for="(group, gIndex) in gameState.exposed[0]" :key="'exp'+gIndex" class="exposed-group">
                   <div v-for="(tile, tIndex) in group.tiles" :key="'expt'+tIndex" class="center-tile-wrapper exposed-tile">
-                     <img :src="group.type === 'angang' && tIndex < 3 ? '/TJMJ/images/3d/back_1.png' : '/TJMJ/images/3d/lay_1.png'" class="center-tile-bg" />
-                     <img v-if="group.type !== 'angang' || tIndex === 3" :src="`/TJMJ/images/tiles/${tile}.png`" class="center-tile-face" />
+                     <img :src="getImg(group.type === 'angang' && tIndex < 3 ? '3d/back_1.png' : '3d/lay_1.png')" class="center-tile-bg" />
+                     <img v-if="group.type !== 'angang' || tIndex === 3" :src="getImg(`tiles/${tile}.png`)" class="center-tile-face" />
                   </div>
                </div>
             </div>
 
             <div v-for="(tile, index) in gameState.handTiles" :key="index" class="hand-tile-wrapper" :class="{ 'selected': gameState.selectedTileIndex === index, 'new-drawn-tile': isNewDrawnTile(index) }" @click="onTapTile(index)">
-              <img src="/TJMJ/images/3d/hand_1.png" class="tile-bg" />
-              <img :src="`/TJMJ/images/tiles/${tile}.png`" class="tile-face" />
+              <img :src="getImg('3d/hand_1.png')" class="tile-bg" />
+              <img :src="getImg(`tiles/${tile}.png`)" class="tile-face" />
             </div>
           </div>
         </div>
 
         <div class="center-area" v-show="gameState.gamePhase === 'PLAYING'">
           <div class="dice-circle">
-            <img :src="`/TJMJ/images/dice/${gameState.dice[0]}.png`" class="dice" />
-            <img :src="`/TJMJ/images/dice/${gameState.dice[1]}.png`" class="dice" />
+            <img :src="getImg(`dice/${gameState.dice[0]}.png`)" class="dice" />
+            <img :src="getImg(`dice/${gameState.dice[1]}.png`)" class="dice" />
           </div>
           <div class="discard-pool">
             <div v-for="(item, index) in gameState.discards" :key="index" 
                  class="center-tile-wrapper"
                  :style="{ gridRow: getDiscardGridPos(index).row, gridColumn: getDiscardGridPos(index).col }">
-               <img src="/TJMJ/images/3d/lay_1.png" class="center-tile-bg" />
-               <img :src="`/TJMJ/images/tiles/${item.value}.png`" class="center-tile-face" />
+               <img :src="getImg('3d/lay_1.png')" class="center-tile-bg" />
+               <img :src="getImg(`tiles/${item.value}.png`)" class="center-tile-face" />
             </div>
           </div>
         </div>
@@ -136,6 +136,11 @@ import { initTiles } from './utils/mjLogic.js';
 import { calculateWang } from './core/constants.js';
 import { HuCalculator } from './core/HuCalculator.js';
 import { RuleChecker } from './core/RuleChecker.js';
+
+// 【核心解法】动态读取环境路径，彻底消灭 404！
+const getImg = (path) => {
+  return `${import.meta.env.BASE_URL}images/${path}`;
+};
 
 const generateRandomAvatars = () => {
   let arr = [];
@@ -487,9 +492,8 @@ const nextTurn = () => {
 .walls-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 55%; height: 50%; pointer-events: none; z-index: 1;}
 .wall { position: absolute; display: flex; }
 
-/* 对家牌堆位置调整区 (你可以调小 top 的负值，比如 -40px) */
+/* 对家牌堆位置调整区 */
 .wall-top { top: -8px; left: 50%; transform: translateX(-50%); }
-
 .wall-bottom { bottom: -30px; left: 50%; transform: translateX(-50%); }
 .wall-left { top: 45%; left: -10px; transform: translateY(-50%); flex-direction: column; }
 .wall-right { top: 45%; right: -10px; transform: translateY(-50%); flex-direction: column; }
@@ -581,31 +585,30 @@ const nextTurn = () => {
 .center-tile-face { position: absolute; top: 1px; left: 100%; transform: translateX(-50%); width: 24px; height: 32px; z-index: 2;}
 
 /* =========================================================
-   THE MAGIC ROTATION LOGIC FOR MOBILE PORTRAIT
+   神奇的横屏魔法 (仅靠 CSS 强制扭转你的桌面)
    ========================================================= */
 @media screen and (orientation: portrait) {
   #game-wrapper {
-    /* Force the wrapper to take the full width and height of the screen */
+    /* 强行把原本的长宽对调 */
     width: 100vh;
     height: 100vw;
-    /* Rotate it 90 degrees */
+    /* 强行旋转 90 度 */
     transform: rotate(90deg);
-    /* Adjust origin so it stays centered */
     transform-origin: center center;
-    /* Ensure the wrapper respects the screen boundaries after rotation */
     position: absolute;
+    /* 计算出旋转后的居中偏移量 */
     top: calc((100vh - 100vw) / 2);
     left: calc((100vw - 100vh) / 2);
   }
   
   .mahjong-desk {
-    /* Scale the desk so it fits perfectly on a mobile screen */
+    /* 在旋转好的盒子里，等比例微缩你的完美 UI */
     transform: scale(min(calc(100vh / 960), calc(100vw / 533)));
     transform-origin: center;
   }
 }
 
-/* Fallback scaling for landscape devices to ensure it always fits */
+/* 如果玩家本身就是横屏拿着手机，正常微缩即可 */
 @media screen and (orientation: landscape) {
   .mahjong-desk {
     transform: scale(min(calc(100vw / 960), calc(100vh / 533)));
