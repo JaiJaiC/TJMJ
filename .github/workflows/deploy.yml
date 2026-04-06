@@ -1,0 +1,50 @@
+name: 自动部署桃江麻将到 GitHub Pages
+
+on:
+  # 每当你把代码推送到 main 分支时，自动触发
+  push:
+    branches: ['main']
+
+# 设置云端服务器的读写权限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取最新代码
+        uses: actions/checkout@v4
+        
+      - name: 配置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      - name: 安装依赖
+        run: cd frontend && npm install
+        
+      - name: 开始打包 (云端大厨炒菜)
+        run: cd frontend && npm run build
+        
+      - name: 配置 GitHub Pages
+        uses: actions/configure-pages@v4
+        
+      - name: 上传打包好的成品
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # 精准定位打包后的文件夹路径
+          path: './frontend/dist'
+          
+      - name: 🚀 部署上线！
+        id: deployment
+        uses: actions/deploy-pages@v4
