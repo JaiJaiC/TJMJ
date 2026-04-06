@@ -14,7 +14,7 @@
         <h2>等待玩家准备</h2>
         <div class="ready-players">
           <div class="ready-player" v-for="(player, index) in gameState.players" :key="index">
-             <img :src="`/TJMJ/images/avatars/${player.avatar}.png`" class="ready-avatar" :class="{'is-ready': gameState.readyStatus[index]}" />
+             <img :src="`./images/avatars/${player.avatar}.png`" class="ready-avatar" :class="{'is-ready': gameState.readyStatus[index]}" />
              <p>{{ player.name }}</p>
              <span v-if="gameState.readyStatus[index]" class="ready-badge">已准备</span>
           </div>
@@ -23,32 +23,32 @@
       </div>
 
       <div class="walls-container" v-show="gameState.gamePhase === 'PLAYING' || gameState.gamePhase === 'SETTLEMENT'">
-        <div class="wall wall-top"><div v-for="n in 14" :key="'top'+n" class="wall-stack-wrapper h-stack"><img v-if="gameState.wallTiles[(27 + n - 1) * 2 + 1]" src="/images/3d/back_3.png" class="stack-bottom h-bg" /><img v-if="gameState.wallTiles[(27 + n - 1) * 2]" src="/images/3d/back_3.png" class="stack-top h-bg" /><img v-if="gameState.diIndex === (27 + n - 1) * 2" :src="`/TJMJ/images/tiles/${gameState.diTile}.png`" class="stack-top di-face h-face" /></div></div>
-        <div class="wall wall-left"><div v-for="n in 13" :key="'left'+n" class="wall-stack-wrapper v-stack"><img v-if="gameState.wallTiles[(26 - (n - 1)) * 2 + 1]" src="/images/3d/back_4.png" class="stack-bottom v-bg" /><img v-if="gameState.wallTiles[(26 - (n - 1)) * 2]" src="/images/3d/back_4.png" class="stack-top v-bg" /><img v-if="gameState.diIndex === (26 - (n - 1)) * 2" :src="`/TJMJ/images/tiles/${gameState.diTile}.png`" class="stack-top di-face v-face" /></div></div>
-        <div class="wall wall-right"><div v-for="n in 13" :key="'right'+n" class="wall-stack-wrapper v-stack"><img v-if="gameState.wallTiles[(41 + n - 1) * 2 + 1]" src="/images/3d/back_2.png" class="stack-bottom v-bg" /><img v-if="gameState.wallTiles[(41 + n - 1) * 2]" src="/images/3d/back_2.png" class="stack-top v-bg" /><img v-if="gameState.diIndex === (41 + n - 1) * 2" :src="`/TJMJ/images/tiles/${gameState.diTile}.png`" class="stack-top di-face v-face" /></div></div>
-        <div class="wall wall-bottom"><div v-for="n in 14" :key="'bottom'+n" class="wall-stack-wrapper h-stack"><img v-if="gameState.wallTiles[(13 - (n - 1)) * 2 + 1]" src="/images/3d/back_1.png" class="stack-bottom h-bg" /><img v-if="gameState.wallTiles[(13 - (n - 1)) * 2]" src="/images/3d/back_1.png" class="stack-top h-bg" /><img v-if="gameState.diIndex === (13 - (n - 1)) * 2" :src="`/TJMJ/images/tiles/${gameState.diTile}.png`" class="stack-top di-face h-face" /></div></div>
+        <div class="wall wall-top"><div v-for="n in 14" :key="'top'+n" class="wall-stack-wrapper h-stack"><img v-if="gameState.wallTiles[(27 + n - 1) * 2 + 1]" src="./images/3d/back_3.png" class="stack-bottom h-bg" /><img v-if="gameState.wallTiles[(27 + n - 1) * 2]" src="./images/3d/back_3.png" class="stack-top h-bg" /><img v-if="gameState.diIndex === (27 + n - 1) * 2" :src="`./images/tiles/${gameState.diTile}.png`" class="stack-top di-face h-face" /></div></div>
+        <div class="wall wall-left"><div v-for="n in 13" :key="'left'+n" class="wall-stack-wrapper v-stack"><img v-if="gameState.wallTiles[(26 - (n - 1)) * 2 + 1]" src="./images/3d/back_4.png" class="stack-bottom v-bg" /><img v-if="gameState.wallTiles[(26 - (n - 1)) * 2]" src="./images/3d/back_4.png" class="stack-top v-bg" /><img v-if="gameState.diIndex === (26 - (n - 1)) * 2" :src="`./images/tiles/${gameState.diTile}.png`" class="stack-top di-face v-face" /></div></div>
+        <div class="wall wall-right"><div v-for="n in 13" :key="'right'+n" class="wall-stack-wrapper v-stack"><img v-if="gameState.wallTiles[(41 + n - 1) * 2 + 1]" src="./images/3d/back_2.png" class="stack-bottom v-bg" /><img v-if="gameState.wallTiles[(41 + n - 1) * 2]" src="./images/3d/back_2.png" class="stack-top v-bg" /><img v-if="gameState.diIndex === (41 + n - 1) * 2" :src="`./images/tiles/${gameState.diTile}.png`" class="stack-top di-face v-face" /></div></div>
+        <div class="wall wall-bottom"><div v-for="n in 14" :key="'bottom'+n" class="wall-stack-wrapper h-stack"><img v-if="gameState.wallTiles[(13 - (n - 1)) * 2 + 1]" src="./images/3d/back_1.png" class="stack-bottom h-bg" /><img v-if="gameState.wallTiles[(13 - (n - 1)) * 2]" src="./images/3d/back_1.png" class="stack-top h-bg" /><img v-if="gameState.diIndex === (13 - (n - 1)) * 2" :src="`./images/tiles/${gameState.diTile}.png`" class="stack-top di-face h-face" /></div></div>
       </div>
 
       <div class="player-top">
         <div class="avatar-box" :class="{ 'active-glow': gameState.currentPlayerIndex === 2 }">
-          <img :src="`/TJMJ/images/avatars/${gameState.players[2].avatar}.png`" class="avatar-img" />
+          <img :src="`./images/avatars/${gameState.players[2].avatar}.png`" class="avatar-img" />
           <span class="name">对家</span>
           <span class="score" :class="gameState.players[2].score >= 0 ? 'score-up' : 'score-down'">{{ gameState.players[2].score >= 0 ? '+' : '' }}{{ gameState.players[2].score }}</span>
         </div>
         <div class="cards-container-top">
            <div class="npc-exposed top-exposed" v-if="gameState.exposed[2].length > 0">
               <div v-for="(t, i) in getFlatExposed(2)" :key="i" class="rotator-top">
-                  <img src="/images/3d/lay_1.png" class="center-tile-bg" />
-                  <img :src="`/TJMJ/images/tiles/${t}.png`" class="center-tile-face" />
+                  <img src="./images/3d/lay_1.png" class="center-tile-bg" />
+                  <img :src="`./images/tiles/${t}.png`" class="center-tile-face" />
               </div>
            </div>
-           <div class="hand-tiles-top"><img v-for="n in gameState.npcTileCounts[2]" :key="n" src="/images/3d/hand_3.png" class="tile-back-top" /></div>
+           <div class="hand-tiles-top"><img v-for="n in gameState.npcTileCounts[2]" :key="n" src="./images/3d/hand_3.png" class="tile-back-top" /></div>
         </div>
       </div>
       
       <div class="player-left">
         <div class="avatar-box" :class="{ 'active-glow': gameState.currentPlayerIndex === 3 }">
-          <img :src="`/TJMJ/images/avatars/${gameState.players[3].avatar}.png`" class="avatar-img" />
+          <img :src="`./images/avatars/${gameState.players[3].avatar}.png`" class="avatar-img" />
           <span class="name">上家</span>
           <span class="score" :class="gameState.players[3].score >= 0 ? 'score-up' : 'score-down'">{{ gameState.players[3].score >= 0 ? '+' : '' }}{{ gameState.players[3].score }}</span>
         </div>
@@ -56,29 +56,29 @@
            <div class="npc-exposed left-exposed" v-if="gameState.exposed[3].length > 0">
               <div v-for="(t, i) in getFlatExposed(3)" :key="i" class="npc-exposed-wrapper-side">
                   <div class="rotator rotator-left">
-                     <img src="/images/3d/lay_1.png" class="center-tile-bg" />
-                     <img :src="`/TJMJ/images/tiles/${t}.png`" class="center-tile-face" />
+                     <img src="./images/3d/lay_1.png" class="center-tile-bg" />
+                     <img :src="`./images/tiles/${t}.png`" class="center-tile-face" />
                   </div>
               </div>
            </div>
-           <div class="hand-tiles-left"><img v-for="n in gameState.npcTileCounts[3]" :key="n" src="/images/3d/hand_4.png" class="tile-back-side" /></div>
+           <div class="hand-tiles-left"><img v-for="n in gameState.npcTileCounts[3]" :key="n" src="./images/3d/hand_4.png" class="tile-back-side" /></div>
         </div>
       </div>
       
       <div class="player-right">
         <div class="cards-container-side">
-           <div class="hand-tiles-right"><img v-for="n in gameState.npcTileCounts[1]" :key="n" src="/images/3d/hand_2.png" class="tile-back-side" /></div>
+           <div class="hand-tiles-right"><img v-for="n in gameState.npcTileCounts[1]" :key="n" src="./images/3d/hand_2.png" class="tile-back-side" /></div>
            <div class="npc-exposed right-exposed" v-if="gameState.exposed[1].length > 0">
               <div v-for="(t, i) in getFlatExposed(1)" :key="i" class="npc-exposed-wrapper-side">
                   <div class="rotator rotator-right">
-                     <img src="/images/3d/lay_1.png" class="center-tile-bg" />
-                     <img :src="`/TJMJ/images/tiles/${t}.png`" class="center-tile-face" />
+                     <img src="./images/3d/lay_1.png" class="center-tile-bg" />
+                     <img :src="`./images/tiles/${t}.png`" class="center-tile-face" />
                   </div>
               </div>
            </div>
         </div>
         <div class="avatar-box" :class="{ 'active-glow': gameState.currentPlayerIndex === 1 }">
-          <img :src="`/TJMJ/images/avatars/${gameState.players[1].avatar}.png`" class="avatar-img" />
+          <img :src="`./images/avatars/${gameState.players[1].avatar}.png`" class="avatar-img" />
           <span class="name">下家</span>
           <span class="score" :class="gameState.players[1].score >= 0 ? 'score-up' : 'score-down'">{{ gameState.players[1].score >= 0 ? '+' : '' }}{{ gameState.players[1].score }}</span>
         </div>
@@ -86,7 +86,7 @@
 
       <div class="player-bottom">
         <div class="avatar-box" :class="{ 'active-glow': gameState.currentPlayerIndex === 0 }">
-          <img :src="`/TJMJ/images/avatars/${gameState.players[0].avatar}.png`" class="avatar-img" />
+          <img :src="`./images/avatars/${gameState.players[0].avatar}.png`" class="avatar-img" />
           <span class="name">我</span>
           <span class="score" :class="gameState.players[0].score >= 0 ? 'score-up' : 'score-down'">{{ gameState.players[0].score >= 0 ? '+' : '' }}{{ gameState.players[0].score }}</span>
         </div>
@@ -95,30 +95,30 @@
           <div class="exposed-area" v-if="gameState.exposed[0].length > 0">
              <div v-for="(group, gIndex) in gameState.exposed[0]" :key="'exp'+gIndex" class="exposed-group">
                 <div v-for="(tile, tIndex) in group.tiles" :key="'expt'+tIndex" class="center-tile-wrapper exposed-tile">
-                   <img :src="group.type === 'angang' && tIndex < 3 ? '/images/3d/back_1.png' : '/images/3d/lay_1.png'" class="center-tile-bg" />
-                   <img v-if="group.type !== 'angang' || tIndex === 3" :src="`/TJMJ/images/tiles/${tile}.png`" class="center-tile-face" />
+                   <img :src="group.type === 'angang' && tIndex < 3 ? './images/3d/back_1.png' : './images/3d/lay_1.png'" class="center-tile-bg" />
+                   <img v-if="group.type !== 'angang' || tIndex === 3" :src="`./images/tiles/${tile}.png`" class="center-tile-face" />
                 </div>
              </div>
           </div>
 
           <div v-for="(tile, index) in gameState.handTiles" :key="index" class="hand-tile-wrapper" :class="{ 'selected': gameState.selectedTileIndex === index, 'new-drawn-tile': isNewDrawnTile(index) }" @click="onTapTile(index)">
-            <img src="/images/3d/hand_1.png" class="tile-bg" />
-            <img :src="`/TJMJ/images/tiles/${tile}.png`" class="tile-face" />
+            <img src="./images/3d/hand_1.png" class="tile-bg" />
+            <img :src="`./images/tiles/${tile}.png`" class="tile-face" />
           </div>
         </div>
       </div>
 
       <div class="center-area" v-show="gameState.gamePhase === 'PLAYING'">
         <div class="dice-circle">
-          <img :src="`/TJMJ/images/dice/${gameState.dice[0]}.png`" class="dice" />
-          <img :src="`/TJMJ/images/dice/${gameState.dice[1]}.png`" class="dice" />
+          <img :src="`./images/dice/${gameState.dice[0]}.png`" class="dice" />
+          <img :src="`./images/dice/${gameState.dice[1]}.png`" class="dice" />
         </div>
         <div class="discard-pool">
           <div v-for="(item, index) in gameState.discards" :key="index" 
                class="center-tile-wrapper"
                :style="{ gridRow: getDiscardGridPos(index).row, gridColumn: getDiscardGridPos(index).col }">
-             <img src="/images/3d/lay_1.png" class="center-tile-bg" />
-             <img :src="`/TJMJ/images/tiles/${item.value}.png`" class="center-tile-face" />
+             <img src="./images/3d/lay_1.png" class="center-tile-bg" />
+             <img :src="`./images/tiles/${item.value}.png`" class="center-tile-face" />
           </div>
         </div>
       </div>
@@ -463,10 +463,6 @@ const nextTurn = () => {
 </script>
 
 <style scoped>
-/* ==========================================================================
-   移动端自适应与横屏优化 CSS
-   ========================================================================== */
-
 .app-container {
   display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh;
   background-color: #000; overflow: hidden; position: fixed; top: 0; left: 0;
@@ -479,7 +475,6 @@ const nextTurn = () => {
   background-color: #215c32; overflow: hidden; box-shadow: 0 0 5vw #000; color: white; border: 0.5vw solid #1a472a; border-radius: 1vw; z-index: 10;
 }
 
-/* 竖屏提示遮罩 (纯代码渲染，不依赖外部图片) */
 .portrait-overlay {
   position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95);
   z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; pointer-events: auto;
@@ -499,10 +494,6 @@ const nextTurn = () => {
 @media (orientation: portrait) {
   .portrait-overlay { display: flex; }
 }
-
-/* ==========================================================================
-   响应式微调布局 CSS
-   ========================================================================== */
 
 .ready-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 999; }
 .ready-players { display: flex; gap: 4vw; margin: 3vw 0; }
@@ -566,7 +557,6 @@ const nextTurn = () => {
 .rotator .center-tile-bg { width: 100%; height: 100%; position: absolute; top:0; left:0; }
 .rotator .center-tile-face { position: absolute; top: 0.1vw; left: 50%; transform: translateX(-50%); width: 1.4vw; height: 2.1vw; z-index: 2; }
 
-
 .player-bottom { position: absolute; bottom: 2%; left: 50%; transform: translateX(-50%); display: flex; align-items: flex-end; gap: 1.5vw; z-index: 20; }
 .hand-tiles-bottom { display: flex; align-items: flex-end; height: 7.5vw; }
 
@@ -583,18 +573,42 @@ const nextTurn = () => {
 .tile-face { position: absolute; top: 1vw; left: 50%; transform: translateX(-50%); width: 3vw; height: 4vw; z-index: 2; }
 
 .action-buttons {
-  position: absolute; bottom: 12vw; right: 5%; display: flex; gap: 0.5vw; z-index: 100;
+  position: absolute;
+  bottom: 12vw; 
+  right: 5%;
+  display: flex;
+  gap: 0.5vw;
+  z-index: 100;
 }
 .action-btn { width: 5vw; height: 5vw; border-radius: 50%; background: #555; border: 0.2vw solid #333; color: #aaa; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.8vw; transition: 0.3s; }
 .action-btn.active { background: linear-gradient(145deg, #ffcc00, #ff9900); border-color: #fff; color: #fff; cursor: pointer; box-shadow: 0 0.4vw 1vw rgba(255,215,0,0.5); }
 .action-btn.active:active { transform: scale(0.9); }
 .action-btn.pass.active { background: linear-gradient(145deg, #66bb6a, #43a047); } 
 
-.center-area { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 25vw; height: 20vw; z-index: 2; }
+.center-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 25vw;
+  height: 20vw;
+  z-index: 2;
+}
 .dice-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6vw; height: 6vw; border: 0.2vw solid rgba(255, 215, 0, 0.6); border-radius: 50%; display: flex; justify-content: center; align-items: center; gap: 0.4vw; background: rgba(0,0,0,0.4); z-index: 1; }
 .dice { width: 1.8vw; height: 1.8vw; }
 
-.discard-pool { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(5, 1fr); gap: 0.2vw; }
+.discard-pool {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr); 
+  grid-template-rows: repeat(5, 1fr); 
+  gap: 0.2vw;
+}
 .center-tile-wrapper { position: relative; width: 100%; height: 100%; }
 .center-tile-bg { position: absolute; width: 100%; height: 100%; }
 .center-tile-face { position: absolute; top: 0.1vw; left: 50%; transform: translateX(-50%); width: 80%; height: 80%; z-index: 2;}
