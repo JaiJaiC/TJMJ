@@ -90,3 +90,19 @@ npm run build
 
 vercel.com
 
+# 1. 进入 frontend 目录进行打包
+cd frontend
+npm run build
+
+# 2. 打包完成后，退回父目录
+cd ..
+
+# 3. 将新生成的打包成品 (dist) 添加进 Git（因为默认会被隐藏，需要 -f 强制添加）
+git add frontend/dist -f
+
+# 4. 提交这些文件
+git commit -m "优化：适配移动端自适应与横屏模式"
+
+# 5. 暴力发布脚本（跳过 Windows 命令行长度限制，精准推送 dist）
+git subtree push --prefix frontend/dist origin gh-pages
+
