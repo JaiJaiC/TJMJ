@@ -3,125 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <meta name="description" content="TJMJ: A Full-Stack Web-Based Taojiang Classic Wang Mahjong Platform for Entertainment &amp; Education">
-  <meta name="keywords" content="Mahjong, Agora, Vue 3, Node.js, Multiplayer, Real-time, Game, Taojiang, Wang Mahjong">
+  <meta name="description" content="TJMJ: A Full-Stack Web-Based Taojiang Classic Wang Mahjong Platform">
+  <meta name="keywords" content="Mahjong, Agora, Vue 3, Node.js, Multiplayer, Real-time, Taojiang">
   <title>TJMJ</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect fill='%23f5f0e0' width='64' height='64' rx='8' stroke='%23c8a84e' stroke-width='2'/%3E%3Crect fill='none' x='2' y='2' width='60' height='60' rx='6' stroke='%23fff8' stroke-width='1'/%3E%3Ctext fill='%23c41e1e' font-size='40' font-family='serif' font-weight='bold' text-anchor='middle' x='32' y='46'%3E發%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect fill='%23f5f0e0' width='64' height='64' rx='8' stroke='%23c8a84e' stroke-width='2'/%3E%3Ctext fill='%23c41e1e' font-size='40' font-family='serif' font-weight='bold' text-anchor='middle' x='32' y='46'%3E發%3C/text%3E%3C/svg%3E">
   <style>
     :root {
-      --primary: #1a472a;
-      --accent: #4CAF50;
-      --gold: #d4a853;
-      --bg: #fafaf8;
-      --card: #fff;
-      --text: #333;
-      --muted: #666;
-      --border: #e0e0e0;
-      --radius: 12px;
-      --max-w: 900px;
+      --g1: #0d2b0d; --g2: #1a472a; --g3: #2d5a2d; --g4: #3a6b3a;
+      --accent: #4CAF50; --gold: #d4a853;
+      --bg: #f6f8f6; --card: #fff; --text: #333; --muted: #666; --border: #d8e8d8;
+      --radius: 10px; --max-w: 880px;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
-      background: var(--bg); color: var(--text); line-height: 1.7;
-    }
+    body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',sans-serif; background:var(--bg); color:var(--text); line-height:1.65; }
     .hero {
-      background: linear-gradient(160deg, #0d2b0d 0%, #1a472a 30%, #2d5a2d 60%, #1a3a1a 100%);
-      color: #fff; text-align: center;
-      min-height: 100vh; min-height: 100dvh;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      padding: 30px 24px 50px; /* 上移10px */
-      position: relative;
-      overflow: hidden;
+      background: linear-gradient(160deg, var(--g1) 0%, var(--g2) 30%, var(--g3) 60%, var(--g2) 100%);
+      color:#fff; text-align:center; min-height:100vh; min-height:100dvh;
+      display:flex; flex-direction:column; justify-content:center; align-items:center;
+      padding:30px 24px 50px; position:relative; overflow:hidden;
     }
     .hero::before {
-      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%;
       background: radial-gradient(circle at 30% 40%, rgba(255,255,255,.03) 0%, transparent 50%),
                   radial-gradient(circle at 70% 60%, rgba(255,215,0,.04) 0%, transparent 40%);
-      pointer-events: none;
+      pointer-events:none;
     }
-    .hero > * { position: relative; z-index: 1; }
-    .hero h1 { font-size: clamp(2.4em, 6vw, 4em); font-weight: 900; margin-bottom: 10px; letter-spacing: 2px; display:flex; align-items:center; justify-content:center; gap:10px; }
+    .hero>* { position:relative; z-index:1; }
+    .hero h1 { font-size:clamp(2.4em,6vw,4em); font-weight:900; margin-bottom:10px; letter-spacing:2px; display:flex; align-items:center; justify-content:center; gap:10px; }
     .hero h1 .mj {
-      display: inline-flex; align-items:center; justify-content:center;
-      width: 1em; height: 1em;
-      background: linear-gradient(180deg, #fefdf6 0%, #f5f0e0 30%, #e8dfc8 60%, #ddd4b8 100%);
-      border-radius: 4px;
-      color: #c41e1e; font-family: 'KaiTi','STKaiti','SimSun',serif;
-      font-size: .7em; font-weight: 900; line-height:1;
-      box-shadow:
-        inset 1px 1px 0 #fff, inset -1px -1px 2px rgba(0,0,0,.12),
-        1px 2px 0 #b8a880, 2px 4px 8px rgba(0,0,0,.3);
-      text-shadow: 1px 1px 0 rgba(255,255,255,.5);
+      display:inline-flex; align-items:center; justify-content:center; width:1em; height:1em;
+      background:linear-gradient(180deg, #fefdf6 0%, #f5f0e0 30%, #e8dfc8 60%, #ddd4b8 100%);
+      border-radius:4px; color:#c41e1e; font-family:'KaiTi','STKaiti','SimSun',serif;
+      font-size:.7em; font-weight:900; line-height:1;
+      box-shadow:inset 1px 1px 0 #fff,inset -1px -1px 2px rgba(0,0,0,.12),1px 2px 0 #b8a880,2px 4px 8px rgba(0,0,0,.3);
+      text-shadow:1px 1px 0 rgba(255,255,255,.5);
     }
-    .hero .subtitle { font-size: clamp(.95em, 2vw, 1.15em); opacity: 0.9; margin-bottom: 20px; font-weight: 700; letter-spacing: .3px; max-width: 640px; }
-    .hero .authors { font-size: clamp(.78em, 1.3vw, .9em); opacity: 0.7; margin-bottom: 4px; line-height: 1.7; max-width: 650px; }
-    .hero .affil { font-size: clamp(.7em, 1.1vw, .8em); opacity: 0.55; margin-bottom: 24px; }
+    .hero .subtitle { font-size:clamp(.9em,1.8vw,1.1em); opacity:.9; margin-bottom:18px; font-weight:700; max-width:640px; }
+    .hero .authors { font-size:clamp(.74em,1.2vw,.85em); opacity:.7; margin-bottom:4px; line-height:1.6; max-width:650px; }
+    .hero .affil { font-size:clamp(.66em,1vw,.76em); opacity:.55; margin-bottom:22px; }
     .hero .links { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
-    .hero .links a {
-      display:inline-flex; align-items:center; gap:6px; padding:8px 20px;
-      border-radius:30px; font-size:.84em; font-weight:600; text-decoration:none;
-      transition:all .25s; border:2px solid rgba(255,255,255,.3); color:#fff;
-      backdrop-filter: blur(4px);
-    }
+    .hero .links a { display:inline-flex; align-items:center; gap:6px; padding:7px 18px; border-radius:30px; font-size:.8em; font-weight:600; text-decoration:none; transition:all .25s; border:2px solid rgba(255,255,255,.3); color:#fff; }
     .hero .links a:hover { background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.6); transform:translateY(-1px); }
-    .hero .links .primary { background: var(--gold); color: #1a3a1a; border-color: var(--gold); font-weight: 700; }
-    .hero .links .primary:hover { background: #e8c46c; transform:translateY(-2px); box-shadow:0 4px 16px rgba(212,168,83,.4); }
-    .hero .scroll-hint {
-      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
-      font-size: 1.6em; opacity: .5; animation: bounce 2s infinite; z-index: 1;
-    }
+    .hero .links .primary { background:var(--gold); color:var(--g1); border-color:var(--gold); font-weight:700; }
+    .hero .links .primary:hover { background:#e8c46c; transform:translateY(-2px); box-shadow:0 4px 16px rgba(212,168,83,.4); }
+    .hero .scroll-hint { position:absolute; bottom:28px; left:50%; transform:translateX(-50%); font-size:1.4em; opacity:.45; animation:bounce 2s infinite; z-index:1; }
     @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(10px)} }
 
-    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
-    section { padding: 36px 0; }
-    section h2 { font-size: 1.5em; font-weight: 700; margin-bottom: 16px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; letter-spacing: .2px; }
-    section h3 { font-size: 1.15em; font-weight: 600; margin: 18px 0 8px; color: #2d5a2d; }
+    .container { max-width:var(--max-w); margin:0 auto; padding:0 24px; }
+    section { padding:32px 0; }
+    section h2 { font-size:1.35em; font-weight:700; margin-bottom:14px; color:var(--g2); border-bottom:2px solid var(--border); padding-bottom:7px; }
+    section h3 { font-size:1.05em; font-weight:600; margin:16px 0 8px; color:var(--g3); }
+    .abstract { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:22px 26px; }
+    .abstract p { font-size:.9em; color:#444; line-height:1.7; }
 
-    .abstract { background: var(--card); border-radius: var(--radius); padding: 24px 28px; box-shadow:0 2px 12px rgba(0,0,0,.04); }
-    .abstract p { font-size: .98em; color: #444; line-height: 1.75; }
+    .features { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; margin-top:12px; }
+    .feature-card { background:var(--card); border:1px solid var(--border); border-left:4px solid var(--accent); border-radius:8px; padding:16px 18px; transition:transform .15s,box-shadow .15s; }
+    .feature-card:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,.06); }
+    .feature-card h4 { font-size:.95em; margin-bottom:5px; color:var(--g2); }
+    .feature-card p { font-size:.82em; color:var(--muted); line-height:1.5; }
 
-    .features { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; margin-top:14px; }
-    .feature-card {
-      background:var(--card); border-radius:10px; padding:18px 20px;
-      box-shadow:0 1px 8px rgba(0,0,0,.04); border-left:4px solid var(--accent); transition:transform .2s;
-    }
-    .feature-card:hover { transform:translateY(-2px); box-shadow:0 4px 14px rgba(0,0,0,.07); }
-    .feature-card h4 { font-size:1em; margin-bottom:6px; color:var(--primary); }
-    .feature-card p { font-size:.88em; color:var(--muted); line-height:1.55; }
-
-    .stats { display:flex; justify-content:center; gap:36px; flex-wrap:wrap; margin:18px 0; }
+    .stats { display:flex; justify-content:center; gap:32px; flex-wrap:wrap; margin:16px 0; }
     .stat { text-align:center; }
-    .stat .num { font-size:2.2em; font-weight:800; color:var(--accent); }
-    .stat .label { font-size:.82em; color:var(--muted); margin-top:2px; }
+    .stat .num { font-size:2em; font-weight:800; color:var(--accent); }
+    .stat .label { font-size:.78em; color:var(--muted); margin-top:1px; }
 
-    .tech-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin-top:12px; }
-    .tech-item { background:var(--card); border-radius:8px; padding:12px 14px; text-align:center; font-size:.84em; box-shadow:0 1px 4px rgba(0,0,0,.03); transition:transform .15s; }
-    .tech-item:hover { transform:translateY(-1px); }
-    .tech-item strong { display:block; color:var(--primary); margin-bottom:2px; font-size:.98em; }
+    .tech-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:7px; margin-top:10px; }
+    .tech-item { background:var(--card); border:1px solid var(--border); border-radius:7px; padding:10px 12px; text-align:center; font-size:.8em; }
+    .tech-item strong { display:block; color:var(--g2); margin-bottom:1px; font-size:.95em; }
 
-    .bibtex { background:#f0f4f0; border-radius:10px; padding:18px 22px; font-family:'Courier New',monospace; font-size:.8em; overflow-x:auto; border:1px solid var(--border); line-height:1.5; }
+    .bibtex { background:#f0f6f0; border:1px solid var(--border); border-radius:8px; padding:16px 20px; font-family:'Courier New',monospace; font-size:.76em; overflow-x:auto; line-height:1.45; }
     .bibtex pre { margin:0; white-space:pre-wrap; word-break:break-all; }
 
-    .footer { text-align:center; padding:24px 20px; color:var(--muted); font-size:.82em; border-top:1px solid var(--border); margin-top:32px; line-height:1.7; }
+    .footer { text-align:center; padding:22px 20px; color:var(--muted); font-size:.78em; border-top:1px solid var(--border); margin-top:28px; line-height:1.6; }
 
-    .screenshots { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-top:12px; }
-    .screenshots img { width:100%; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.06); transition:transform .2s; }
-    .screenshots img:hover { transform:scale(1.03); }
+    .screenshots { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-top:10px; }
+    .screenshots img { width:100%; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.06); }
 
     @media(max-width:640px){
-      .hero { min-height: 100vh; min-height: 100dvh; padding: 32px 16px; }
-      .hero h1 { font-size:2.2em; }
-      .hero .subtitle { font-size:.95em; }
-      .hero .links a { padding:8px 18px; font-size:.8em; }
-      .stats { gap: 24px; }
-      .stat .num { font-size: 1.8em; }
+      .hero { min-height:100vh; min-height:100dvh; padding:28px 14px; }
+      .hero h1 { font-size:2em; }
+      .hero .links a { padding:7px 14px; font-size:.76em; }
+      .stats { gap:20px; }
+      .stat .num { font-size:1.6em; }
     }
   </style>
 </head>
 <body>
 
-<!-- ====== Hero ====== -->
 <header class="hero">
   <h1><span class="mj">發</span> TJMJ</h1>
   <div class="subtitle">Taojiang Classic Wang Mahjong — Full-Stack Real-Time Web Mahjong Platform</div>
@@ -132,176 +100,130 @@
   <div class="affil">TJMJ Lab, Taojiang, Hunan, China &ensp; | &ensp; Corresponding Author: Jaijai C</div>
   <div class="links">
     <a href="https://jaijaic.github.io/TJMJ/" target="_blank" class="primary">🎮 Play Online</a>
-    <a href="https://github.com/JaijaiC/TJMJ" target="_blank"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
-    <a href="TJMJ_CN.pdf" target="_blank">📄 Technical Report (CN)</a>
-    <a href="TJMJ_EN.pdf" target="_blank">📄 Technical Report (EN)</a>
+    <a href="https://github.com/JaijaiC/TJMJ" target="_blank"><svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    <a href="TJMJ_CN.pdf" target="_blank">📄 CN Manual</a>
+    <a href="TJMJ_EN.pdf" target="_blank">📄 EN Manual</a>
   </div>
   <div class="scroll-hint">↓</div>
 </header>
 
-<!-- ====== Abstract ====== -->
 <section class="container">
   <h2>📝 Abstract</h2>
   <div class="abstract">
     <p>
-      Taojiang Classic Wang Mahjong (TJMJ) is a full-stack web-based mahjong gaming platform designed for the Taojiang region of Hunan Province. The project fully implements the core rule system of Taojiang local mahjong — including <strong>dynamic wildcard determination (Ban Wang)</strong>, <strong>Zha Niao multiplier</strong> scoring, <strong>Menzi cumulative fan</strong> patterns, and combination winning hands — supporting <strong>single-player AI</strong>, <strong>four-player online multiplayer</strong>, and <strong>spectator</strong> modes.
-      The technical architecture adopts a <strong>Vue 3</strong> Composition API frontend with <strong>Vite 8</strong> build tooling, a <strong>Node.js WebSocket</strong> server, and <strong>Agora SD-RTN</strong> cloud-based real-time voice (10,000 min/month free tier). The frontend is deployed on GitHub Pages, with the backend exposed via ngrok TCP tunneling.
-      Core algorithms include an $\mathcal{O}(3^k)$ recursive backtracking winning-hand detection engine (sub-millisecond measured runtime), a heuristic NPC discard strategy, and a count-difference client-server hand-tile synchronization algorithm.
-      The project is fully open-source (MIT License) with approximately <strong>4,200 lines of code</strong>, accompanied by complete technical manuals in both Chinese (30 pages) and English (29 pages).
+      Taojiang Classic Wang Mahjong (TJMJ) is a full-stack web-based mahjong gaming platform designed for the Taojiang region of Hunan Province. The project fully implements the core rule system — <strong>dynamic wildcard (Ban Wang)</strong>, <strong>Zha Niao multiplier</strong> scoring, <strong>Menzi cumulative fan</strong> patterns — supporting <strong>single-player AI</strong>, <strong>four-player online</strong>, and <strong>spectator</strong> modes.
+      The architecture uses <strong>Vue 3</strong> + <strong>Vite 8</strong> frontend, <strong>Node.js WebSocket</strong> server, and <strong>Agora SD-RTN</strong> cloud voice (10,000 min/month free). Frontend on GitHub Pages, backend via ngrok TCP tunnel.
+      Core algorithms include an <strong>O(3<sup>k</sup>)</strong> recursive backtracking winning-hand engine (sub-ms runtime), heuristic NPC strategy, and count-difference hand-tile sync.
+      Fully open-source (~4,200 lines), with bilingual manuals: Chinese (30pp) and English (29pp).
     </p>
   </div>
 </section>
 
-<!-- ====== Key Metrics ====== -->
 <section class="container">
   <h2>📊 Project Overview</h2>
   <div class="stats">
-    <div class="stat"><div class="num">4,244</div><div class="label">Core Lines of Code</div></div>
-    <div class="stat"><div class="num">12</div><div class="label">Core Source Files</div></div>
-    <div class="stat"><div class="num">30</div><div class="label">WebSocket Message Types</div></div>
-    <div class="stat"><div class="num">17</div><div class="label">Winning Hand Types</div></div>
-    <div class="stat"><div class="num">30</div><div class="label">Pages (CN Manual)</div></div>
+    <div class="stat"><div class="num">4,244</div><div class="label">Lines of Code</div></div>
+    <div class="stat"><div class="num">12</div><div class="label">Core Files</div></div>
+    <div class="stat"><div class="num">30</div><div class="label">Message Types</div></div>
+    <div class="stat"><div class="num">17</div><div class="label">Win Types</div></div>
+    <div class="stat"><div class="num">30</div><div class="label">Manual Pages</div></div>
   </div>
 </section>
 
-<!-- ====== Features ====== -->
 <section class="container">
   <h2>✨ Key Features</h2>
   <div class="features">
-    <div class="feature-card">
-      <h4>🀄 Complete Taojiang Rules</h4><p>Dynamic wildcard (Ban Wang) · Zha Niao multiplier scoring · Menzi cumulative fan patterns · Combination winning hands · 108-tile compact deck, faithfully matching Taojiang local play.</p>
-    </div>
-    <div class="feature-card">
-      <h4>🌐 Full-Stack Web Architecture</h4><p>Vue 3 Composition API + Vite 8 frontend · Node.js ws server · JSON over WebSocket real-time communication · GitHub Pages deployment.</p>
-    </div>
-    <div class="feature-card">
-      <h4>🎙️ Real-Time Voice</h4><p>Agora SD-RTN cloud relay · Opus 48kHz codec · 10,000 min/month free tier · No P2P NAT issues · Auto channel join on room entry.</p>
-    </div>
-    <div class="feature-card">
-      <h4>🤖 Intelligent NPC</h4><p>Heuristic AI discard strategy: ting-priority evaluation · hand-tile weighted scoring · defensive play · smart chi/peng decisions.</p>
-    </div>
-    <div class="feature-card">
-      <h4>📱 Cross-Platform</h4><p>iOS Safari adaptation · Android Chrome dvh support · Desktop scaling · Touch drag-and-drop · Auto-reconnection · 15s action timeout deadlock prevention.</p>
-    </div>
-    <div class="feature-card">
-      <h4>🔧 Developer-Friendly</h4><p>Fully open-source · Comprehensive bilingual documentation · TiKZ architecture diagrams · Algorithm pseudocode · Complete protocol tables · One-click launch script.</p>
-    </div>
+    <div class="feature-card"><h4>🀄 Taojiang Rules</h4><p>Ban Wang wildcard · Zha Niao multiplier · Menzi cumulative fan · 108-tile deck, faithful to local play.</p></div>
+    <div class="feature-card"><h4>🌐 Full-Stack Web</h4><p>Vue 3 + Vite 8 frontend · Node.js ws server · JSON/WebSocket real-time · GitHub Pages deploy.</p></div>
+    <div class="feature-card"><h4>🎙️ Cloud Voice</h4><p>Agora SD-RTN relay · Opus 48kHz · 10K min/month free · No P2P NAT issues.</p></div>
+    <div class="feature-card"><h4>🤖 Smart NPC</h4><p>Heuristic AI: ting-priority · weighted scoring · defense · chi/peng decisions.</p></div>
+    <div class="feature-card"><h4>📱 Cross-Platform</h4><p>iOS Safari · Android dvh · Desktop scaling · Touch drag-drop · Auto-reconnect.</p></div>
+    <div class="feature-card"><h4>🔧 Dev-Friendly</h4><p>Open-source · Bilingual docs · TiKZ diagrams · Pseudocode · One-click launch.</p></div>
   </div>
 </section>
 
-<!-- ====== Tech Stack ====== -->
 <section class="container">
-  <h2>🛠️ Technology Stack</h2>
+  <h2>🛠️ Tech Stack</h2>
   <div class="tech-grid">
-    <div class="tech-item"><strong>Vue 3.5</strong>Frontend Framework</div>
-    <div class="tech-item"><strong>Vite 8.0</strong>Build Tool</div>
-    <div class="tech-item"><strong>Node.js</strong>Server Runtime</div>
-    <div class="tech-item"><strong>ws 8.18</strong>WebSocket Library</div>
-    <div class="tech-item"><strong>Agora SD-RTN</strong>Real-Time Voice</div>
-    <div class="tech-item"><strong>GitHub Pages</strong>Frontend Deploy</div>
-    <div class="tech-item"><strong>ngrok</strong>Backend Tunnel</div>
-    <div class="tech-item"><strong>Web Speech API</strong>TTS Fallback</div>
-    <div class="tech-item"><strong>Web Audio API</strong>BGM Manager</div>
-    <div class="tech-item"><strong>GitHub Actions</strong>CI Pipeline</div>
-    <div class="tech-item"><strong>LaTeX + TiKZ</strong>Technical Manuals</div>
-    <div class="tech-item"><strong>agora-access-token</strong>Voice Token</div>
+    <div class="tech-item"><strong>Vue 3.5</strong>Frontend</div>
+    <div class="tech-item"><strong>Vite 8.0</strong>Build</div>
+    <div class="tech-item"><strong>Node.js</strong>Server</div>
+    <div class="tech-item"><strong>ws 8.18</strong>WebSocket</div>
+    <div class="tech-item"><strong>Agora</strong>Voice</div>
+    <div class="tech-item"><strong>Pages</strong>Deploy</div>
+    <div class="tech-item"><strong>ngrok</strong>Tunnel</div>
+    <div class="tech-item"><strong>Speech</strong>TTS</div>
+    <div class="tech-item"><strong>Audio</strong>BGM</div>
+    <div class="tech-item"><strong>Actions</strong>CI</div>
+    <div class="tech-item"><strong>LaTeX</strong>Manual</div>
+    <div class="tech-item"><strong>Token</strong>Auth</div>
   </div>
 </section>
 
-<!-- ====== Architecture ====== -->
 <section class="container">
   <h2>🏗️ System Architecture</h2>
-  <p style="text-align:center;color:var(--muted);margin-bottom:16px;">Three-tier B/S Architecture: Vue 3 Frontend → WebSocket Communication → Node.js Server → Dual-End Game Engine</p>
-  <div style="text-align:center;max-width:780px;margin:0 auto;background:#fafdfa;border-radius:12px;padding:16px;border:1px solid var(--border);">
-    <svg viewBox="0 0 720 400" style="width:100%;height:auto;max-width:720px;">
-      <defs>
-        <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#4CAF50"/></marker>
-        <marker id="arrD" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#999"/></marker>
-      </defs>
-      <!-- Presentation Layer -->
-      <rect x="60" y="20" width="600" height="60" rx="6" fill="#e8f5e9" stroke="#4CAF50" stroke-width="1.5"/>
-      <text x="360" y="42" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">Presentation Layer (Browser)</text>
-      <text x="360" y="62" text-anchor="middle" font-size="10" fill="#555">Vue 3 SPA · Vite 8 · Single-File Component (2,602 lines)</text>
-      <!-- Network Layer -->
-      <rect x="60" y="110" width="600" height="60" rx="6" fill="#f3e5f5" stroke="#9c27b0" stroke-width="1.5"/>
-      <text x="360" y="132" text-anchor="middle" font-size="13" font-weight="bold" fill="#7b1fa2">Network Layer</text>
-      <text x="360" y="152" text-anchor="middle" font-size="10" fill="#555">GitHub Pages (HTTPS) · ngrok TCP Tunnel (WSS) · Agora SD-RTN Cloud Voice</text>
-      <!-- Server Layer -->
-      <rect x="60" y="200" width="600" height="70" rx="6" fill="#fff3e0" stroke="#ff9800" stroke-width="1.5"/>
-      <text x="360" y="222" text-anchor="middle" font-size="13" font-weight="bold" fill="#e65100">Application Server (Node.js :8080)</text>
-      <text x="360" y="240" text-anchor="middle" font-size="10" fill="#555">WebSocket Message Routing · GameRoom FSM ×N</text>
-      <text x="360" y="255" text-anchor="middle" font-size="10" fill="#555">Agora Token Generation (HMAC-SHA1, 24h TTL)</text>
-      <!-- Game Engine -->
-      <rect x="60" y="300" width="600" height="55" rx="6" fill="#ffebee" stroke="#e53935" stroke-width="1.5"/>
-      <text x="360" y="322" text-anchor="middle" font-size="13" font-weight="bold" fill="#b71c1c">Game Engine (Dual-End Deployment)</text>
-      <text x="360" y="342" text-anchor="middle" font-size="10" fill="#555">frontend/core/ ↔ server/game/ · HuCalculator · RuleChecker · mjLogic</text>
-      <!-- Arrows -->
-      <line x1="360" y1="80" x2="360" y2="108" stroke="#4CAF50" stroke-width="2" marker-end="url(#arr)"/>
-      <line x1="360" y1="170" x2="360" y2="198" stroke="#4CAF50" stroke-width="2" marker-end="url(#arr)"/>
-      <line x1="360" y1="270" x2="360" y2="298" stroke="#4CAF50" stroke-width="2" marker-end="url(#arr)"/>
-      <!-- Side boxes -->
-      <rect x="680" y="110" width="30" height="60" rx="4" fill="#fff9c4" stroke="#f9a825" stroke-width="1"/>
-      <text x="695" y="145" text-anchor="middle" font-size="8" fill="#f57f17" transform="rotate(-90,695,145)">GitHub Pages</text>
-      <rect x="680" y="200" width="30" height="70" rx="4" fill="#ffcdd2" stroke="#e53935" stroke-width="1"/>
-      <text x="695" y="240" text-anchor="middle" font-size="7" fill="#c62828" transform="rotate(-90,695,240)">GitHub Actions CI</text>
-      <rect x="680" y="20" width="30" height="60" rx="4" fill="#e0f7fa" stroke="#00acc1" stroke-width="1"/>
-      <text x="695" y="55" text-anchor="middle" font-size="8" fill="#00838f" transform="rotate(-90,695,55)">Agora 10K min/mo</text>
-      <!-- Dashed side arrows -->
-      <line x1="678" y1="50" x2="660" y2="50" stroke="#999" stroke-width="1" stroke-dasharray="3" marker-end="url(#arrD)"/>
-      <line x1="678" y1="140" x2="660" y2="140" stroke="#999" stroke-width="1" stroke-dasharray="3" marker-end="url(#arrD)"/>
-      <line x1="678" y1="235" x2="660" y2="235" stroke="#999" stroke-width="1" stroke-dasharray="3" marker-end="url(#arrD)"/>
+  <div style="text-align:center;max-width:720px;margin:0 auto;background:#f8fbf8;border:1px solid var(--border);border-radius:10px;padding:12px;">
+    <svg viewBox="0 0 700 420" style="width:100%;height:auto;">
+      <defs><marker id="a" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5 Z" fill="#4CAF50"/></marker></defs>
+      <rect x="30" y="10" width="560" height="70" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-width="1.5"/>
+      <text x="310" y="36" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">Presentation Layer — Browser</text>
+      <text x="310" y="55" text-anchor="middle" font-size="10" fill="#555">Vue 3 SPA · Vite 8 · Single-File Component (2,602 lines)</text>
+      <text x="310" y="70" text-anchor="middle" font-size="9" fill="#888">Player A (Chrome) · Player B (Safari/iOS) · Player C (Edge) · Spectator</text>
+      <rect x="30" y="115" width="560" height="70" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-width="1.5"/>
+      <text x="310" y="141" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">Network Layer</text>
+      <text x="310" y="160" text-anchor="middle" font-size="10" fill="#555">GitHub Pages (HTTPS) · ngrok TCP Tunnel (WSS)</text>
+      <text x="310" y="175" text-anchor="middle" font-size="9" fill="#888">Agora SD-RTN Cloud Voice (10K min/month free)</text>
+      <rect x="30" y="220" width="560" height="80" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-width="1.5"/>
+      <text x="310" y="246" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">Application Server — Node.js :8080</text>
+      <text x="310" y="265" text-anchor="middle" font-size="10" fill="#555">WebSocket Message Routing · GameRoom FSM ×N</text>
+      <text x="310" y="280" text-anchor="middle" font-size="10" fill="#555">Agora Token Generation (HMAC-SHA1, 24h TTL)</text>
+      <text x="310" y="293" text-anchor="middle" font-size="9" fill="#888">10s timeout deadlock prevention · Exponential backoff reconnection</text>
+      <rect x="30" y="335" width="560" height="55" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-width="1.5"/>
+      <text x="310" y="358" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">Game Engine — Dual-End Deployment</text>
+      <text x="310" y="377" text-anchor="middle" font-size="10" fill="#555">frontend/core/ ↔ server/game/ · HuCalculator · RuleChecker · mjLogic</text>
+      <line x1="310" y1="80" x2="310" y2="113" stroke="#4CAF50" stroke-width="2" marker-end="url(#a)"/>
+      <line x1="310" y1="185" x2="310" y2="218" stroke="#4CAF50" stroke-width="2" marker-end="url(#a)"/>
+      <line x1="310" y1="300" x2="310" y2="333" stroke="#4CAF50" stroke-width="2" marker-end="url(#a)"/>
+      <rect x="610" y="10" width="80" height="70" rx="5" fill="#c8e6c9" stroke="#81c784" stroke-width="1"/>
+      <text x="650" y="50" text-anchor="middle" font-size="8" fill="#2e7d32">Agora SD-RTN</text>
+      <rect x="610" y="115" width="80" height="70" rx="5" fill="#c8e6c9" stroke="#81c784" stroke-width="1"/>
+      <text x="650" y="155" text-anchor="middle" font-size="8" fill="#2e7d32">GitHub Pages</text>
+      <rect x="610" y="220" width="80" height="80" rx="5" fill="#c8e6c9" stroke="#81c784" stroke-width="1"/>
+      <text x="650" y="265" text-anchor="middle" font-size="8" fill="#2e7d32">GitHub Actions</text>
+      <line x1="608" y1="45" x2="592" y2="45" stroke="#a5d6a7" stroke-width="1" stroke-dasharray="3" marker-end="url(#a)"/>
+      <line x1="608" y1="150" x2="592" y2="150" stroke="#a5d6a7" stroke-width="1" stroke-dasharray="3" marker-end="url(#a)"/>
+      <line x1="608" y1="260" x2="592" y2="260" stroke="#a5d6a7" stroke-width="1" stroke-dasharray="3" marker-end="url(#a)"/>
     </svg>
   </div>
 </section>
 
-<!-- ====== Showcase ====== -->
 <section class="container">
-  <h2>🖼️ Interface Showcase</h2>
+  <h2>🖼️ Interface</h2>
   <div class="screenshots">
-    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%23215c32' width='400' height='240' rx='8'/%3E%3Ctext fill='%23fff' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E🀄 Game Interface%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3E4-Player Online + Voice%3C/text%3E%3C/svg%3E" alt="Game Interface"><p style="font-size:.85em;color:var(--muted);margin-top:6px;">Online Match Interface</p></div>
-    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%231a1a2e' width='400' height='240' rx='8'/%3E%3Ctext fill='%23ffd700' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E💰 Settlement%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3EWinner Reveal + Score Display%3C/text%3E%3C/svg%3E" alt="Settlement"><p style="font-size:.85em;color:var(--muted);margin-top:6px;">Round Settlement</p></div>
-    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%230a3c1e' width='400' height='240' rx='8'/%3E%3Ctext fill='%23fff' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E🏠 Main Menu%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3EMode Selection + Documentation%3C/text%3E%3C/svg%3E" alt="Main Menu"><p style="font-size:.85em;color:var(--muted);margin-top:6px;">Main Menu</p></div>
+    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Crect fill='%23215c32' width='400' height='240' rx='8'/%3E%3Ctext fill='%23fff' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E🀄 Game Interface%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3E4-Player + Voice%3C/text%3E%3C/svg%3E" alt=""><p style="font-size:.78em;color:var(--muted);margin-top:4px;">Online Match</p></div>
+    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Crect fill='%231a1a2e' width='400' height='240' rx='8'/%3E%3Ctext fill='%23ffd700' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E💰 Settlement%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3EWinner + Scores%3C/text%3E%3C/svg%3E" alt=""><p style="font-size:.78em;color:var(--muted);margin-top:4px;">Round Settlement</p></div>
+    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Crect fill='%230a3c1e' width='400' height='240' rx='8'/%3E%3Ctext fill='%23fff' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E🏠 Main Menu%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3EMode Selection%3C/text%3E%3C/svg%3E" alt=""><p style="font-size:.78em;color:var(--muted);margin-top:4px;">Main Menu</p></div>
   </div>
 </section>
 
-<!-- ====== BibTeX ====== -->
 <section class="container">
   <h2>📚 Citation</h2>
-  <p style="color:var(--muted);margin-bottom:12px;">If you reference this project in your research, please use the following BibTeX citation:</p>
+  <p style="color:var(--muted);font-size:.85em;margin-bottom:10px;">If you reference this project, please cite:</p>
   <div class="bibtex">
     <pre>@techreport{tjmj2025,
-  title     = {{TJMJ}: A Full-Stack Web-Based Taojiang Classic
-               Wang Mahjong Platform},
-  author    = {Jintian Xia and Siyuan Liu and Jianghong Xiang and
-               Zhuangwei Zeng and Jian Hu and Yangyang Song and
-               Hao Wen and Xiaobing Yang and Erma Li and Jaijai C},
+  title     = {{TJMJ}: A Full-Stack Web-Based Taojiang Classic Wang Mahjong Platform},
+  author    = {Jintian Xia and Siyuan Liu and Jianghong Xiang and Zhuangwei Zeng
+               and Jian Hu and Yangyang Song and Hao Wen and Xiaobing Yang
+               and Erma Li and Jaijai C},
   year      = {2025},
-  note      = {GitHub repository: \url{https://github.com/JaijaiC/TJMJ}},
   url       = {https://jaijaic.github.io/TJMJ/}
 }</pre>
   </div>
 </section>
 
-<!-- ====== Links ====== -->
-<section class="container">
-  <h2>🔗 Links</h2>
-  <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;">
-    <a href="https://github.com/JaijaiC/TJMJ" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📂 GitHub Repository</a>
-    <span style="color:var(--muted);">|</span>
-    <a href="https://jaijaic.github.io/TJMJ/" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">🎮 Live Demo</a>
-    <span style="color:var(--muted);">|</span>
-    <a href="TJMJ_CN.pdf" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📄 Chinese Manual (30pp)</a>
-    <span style="color:var(--muted);">|</span>
-    <a href="TJMJ_EN.pdf" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📄 English Manual (29pp)</a>
-    <span style="color:var(--muted);">|</span>
-    <a href="https://github.com/JaijaiC/TJMJ/blob/main/readme.md" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📖 README</a>
-  </div>
-</section>
-
 <footer class="footer">
-  <p>TJMJ &copy; 2024–2026 · Fully Open Source · For Personal Entertainment &amp; Educational Use Only<br>
-  This project involves no commercial activities and is strictly prohibited from gambling use.</p>
-  <p style="margin-top:8px;">Template inspired by <a href="https://github.com/eliahuhorwitz/Academic-project-page-template">Academic Project Page Template</a></p>
+  <p>TJMJ &copy; 2024–2026 · Fully Open Source · For Personal Entertainment &amp; Education Only</p>
+  <p style="margin-top:6px;">Template: <a href="https://github.com/eliahuhorwitz/Academic-project-page-template">Academic Project Page</a></p>
 </footer>
 
 </body>
