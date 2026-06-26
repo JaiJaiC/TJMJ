@@ -30,7 +30,7 @@
       color: #fff; text-align: center;
       min-height: 100vh; min-height: 100dvh;
       display: flex; flex-direction: column; justify-content: center; align-items: center;
-      padding: 40px 24px;
+      padding: 30px 24px 50px; /* 上移10px */
       position: relative;
       overflow: hidden;
     }
@@ -42,8 +42,17 @@
     }
     .hero > * { position: relative; z-index: 1; }
     .hero h1 { font-size: clamp(2.4em, 6vw, 4.2em); font-weight: 900; margin-bottom: 6px; letter-spacing: 3px; }
-    .hero h1 .mj { font-size: 1.2em; color: var(--gold); font-family: 'KaiTi','STKaiti',serif; }
-    .hero .subtitle { font-size: clamp(1em, 2.2vw, 1.25em); opacity: 0.8; margin-bottom: 28px; font-weight: 300; letter-spacing: .5px; max-width: 600px; }
+    .hero h1 .mj {
+      display: inline-block; width: 1.2em; height: 1.3em; line-height:1.3em;
+      background: linear-gradient(180deg, #4a8c4a 0%, #2d6b2d 50%, #1a5c1a 100%);
+      border: 3px solid #c8a84e; border-radius: 6px;
+      color: #e63946; font-family: 'KaiTi','STKaiti','SimSun',serif;
+      font-size: .85em; font-weight: 900;
+      text-shadow: 1px 1px 0 #fff8, -1px -1px 0 #0003;
+      box-shadow: 2px 3px 0 #0d3d0d, 4px 6px 12px rgba(0,0,0,.3);
+      vertical-align: middle; margin-right: 6px;
+    }
+    .hero .subtitle { font-size: clamp(1em, 2.2vw, 1.25em); opacity: 0.9; margin-bottom: 28px; font-weight: 700; letter-spacing: .5px; max-width: 640px; }
     .hero .authors { font-size: clamp(.82em, 1.5vw, .95em); opacity: 0.7; margin-bottom: 4px; line-height: 1.8; max-width: 650px; }
     .hero .affil { font-size: clamp(.72em, 1.2vw, .82em); opacity: 0.55; margin-bottom: 30px; }
     .hero .links { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
