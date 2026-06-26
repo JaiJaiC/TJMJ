@@ -44,7 +44,7 @@
     .hero h1 { font-size: clamp(2.4em, 6vw, 4em); font-weight: 900; margin-bottom: 10px; letter-spacing: 2px; display:flex; align-items:center; justify-content:center; gap:10px; }
     .hero h1 .mj {
       display: inline-flex; align-items:center; justify-content:center;
-      width: .85em; height: .85em;
+      width: .95em; height: .95em;
       background: linear-gradient(180deg, #fefdf6 0%, #f5f0e0 30%, #e8dfc8 60%, #ddd4b8 100%);
       border-radius: 4px;
       color: #c41e1e; font-family: 'KaiTi','STKaiti','SimSun',serif;
@@ -212,26 +212,45 @@
 <section class="container">
   <h2>🏗️ System Architecture</h2>
   <p style="text-align:center;color:var(--muted);margin-bottom:16px;">Three-tier B/S Architecture: Vue 3 Frontend → WebSocket Communication → Node.js Server → Dual-End Game Engine</p>
-  <div style="text-align:center;max-width:700px;margin:0 auto;">
-    <pre style="background:#f5f7f5;padding:20px;border-radius:12px;font-size:.78em;line-height:1.6;text-align:left;overflow-x:auto;border:1px solid var(--border);">
-┌──────────────────────────────────────────────────┐
-│  <b>Presentation Layer</b> (Browser)                   │
-│  Vue 3 SPA · Vite 8 · Single-File Component       │
-│  Player A (Chrome)  Player B (Safari/iOS)          │
-│  Player C (Edge)     Spectator (Any)                │
-├──────────────────────────────────────────────────┤
-│  <b>Network Layer</b>                                  │
-│  GitHub Pages (HTTPS) · ngrok Tunnel (WSS)         │
-│  Agora SD-RTN Cloud Voice · 10K min/month free     │
-├──────────────────────────────────────────────────┤
-│  <b>Application Server</b> (Node.js :8080)             │
-│  WebSocket Message Routing · GameRoom FSM ×N       │
-│  Agora Token Generation (HMAC-SHA1, 24h TTL)       │
-├──────────────────────────────────────────────────┤
-│  <b>Game Engine</b> (Dual-End Deployment)              │
-│  frontend/core/ ←→ server/game/                    │
-│  HuCalculator · RuleChecker · mjLogic              │
-└──────────────────────────────────────────────────┘</pre>
+  <div style="text-align:center;max-width:780px;margin:0 auto;background:#fafdfa;border-radius:12px;padding:16px;border:1px solid var(--border);">
+    <svg viewBox="0 0 720 400" style="width:100%;height:auto;max-width:720px;">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#4CAF50"/></marker>
+        <marker id="arrD" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#999"/></marker>
+      </defs>
+      <!-- Presentation Layer -->
+      <rect x="60" y="20" width="600" height="60" rx="6" fill="#e8f5e9" stroke="#4CAF50" stroke-width="1.5"/>
+      <text x="360" y="42" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">Presentation Layer (Browser)</text>
+      <text x="360" y="62" text-anchor="middle" font-size="10" fill="#555">Vue 3 SPA · Vite 8 · Single-File Component (2,602 lines)</text>
+      <!-- Network Layer -->
+      <rect x="60" y="110" width="600" height="60" rx="6" fill="#f3e5f5" stroke="#9c27b0" stroke-width="1.5"/>
+      <text x="360" y="132" text-anchor="middle" font-size="13" font-weight="bold" fill="#7b1fa2">Network Layer</text>
+      <text x="360" y="152" text-anchor="middle" font-size="10" fill="#555">GitHub Pages (HTTPS) · ngrok TCP Tunnel (WSS) · Agora SD-RTN Cloud Voice</text>
+      <!-- Server Layer -->
+      <rect x="60" y="200" width="600" height="70" rx="6" fill="#fff3e0" stroke="#ff9800" stroke-width="1.5"/>
+      <text x="360" y="222" text-anchor="middle" font-size="13" font-weight="bold" fill="#e65100">Application Server (Node.js :8080)</text>
+      <text x="360" y="240" text-anchor="middle" font-size="10" fill="#555">WebSocket Message Routing · GameRoom FSM ×N</text>
+      <text x="360" y="255" text-anchor="middle" font-size="10" fill="#555">Agora Token Generation (HMAC-SHA1, 24h TTL)</text>
+      <!-- Game Engine -->
+      <rect x="60" y="300" width="600" height="55" rx="6" fill="#ffebee" stroke="#e53935" stroke-width="1.5"/>
+      <text x="360" y="322" text-anchor="middle" font-size="13" font-weight="bold" fill="#b71c1c">Game Engine (Dual-End Deployment)</text>
+      <text x="360" y="342" text-anchor="middle" font-size="10" fill="#555">frontend/core/ ↔ server/game/ · HuCalculator · RuleChecker · mjLogic</text>
+      <!-- Arrows -->
+      <line x1="360" y1="80" x2="360" y2="108" stroke="#4CAF50" stroke-width="2" marker-end="url(#arr)"/>
+      <line x1="360" y1="170" x2="360" y2="198" stroke="#4CAF50" stroke-width="2" marker-end="url(#arr)"/>
+      <line x1="360" y1="270" x2="360" y2="298" stroke="#4CAF50" stroke-width="2" marker-end="url(#arr)"/>
+      <!-- Side boxes -->
+      <rect x="680" y="110" width="30" height="60" rx="4" fill="#fff9c4" stroke="#f9a825" stroke-width="1"/>
+      <text x="695" y="145" text-anchor="middle" font-size="8" fill="#f57f17" transform="rotate(-90,695,145)">GitHub Pages</text>
+      <rect x="680" y="200" width="30" height="70" rx="4" fill="#ffcdd2" stroke="#e53935" stroke-width="1"/>
+      <text x="695" y="240" text-anchor="middle" font-size="7" fill="#c62828" transform="rotate(-90,695,240)">GitHub Actions CI</text>
+      <rect x="680" y="20" width="30" height="60" rx="4" fill="#e0f7fa" stroke="#00acc1" stroke-width="1"/>
+      <text x="695" y="55" text-anchor="middle" font-size="8" fill="#00838f" transform="rotate(-90,695,55)">Agora 10K min/mo</text>
+      <!-- Dashed side arrows -->
+      <line x1="678" y1="50" x2="660" y2="50" stroke="#999" stroke-width="1" stroke-dasharray="3" marker-end="url(#arrD)"/>
+      <line x1="678" y1="140" x2="660" y2="140" stroke="#999" stroke-width="1" stroke-dasharray="3" marker-end="url(#arrD)"/>
+      <line x1="678" y1="235" x2="660" y2="235" stroke="#999" stroke-width="1" stroke-dasharray="3" marker-end="url(#arrD)"/>
+    </svg>
   </div>
 </section>
 
