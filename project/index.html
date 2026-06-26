@@ -162,37 +162,72 @@
 
 <section class="container">
   <h2>🏗️ System Architecture</h2>
-  <div style="text-align:center;max-width:720px;margin:0 auto;background:#f8fbf8;border:1px solid var(--border);border-radius:10px;padding:12px;">
-    <svg viewBox="0 0 700 420" style="width:100%;height:auto;">
-      <defs><marker id="a" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5 Z" fill="#4CAF50"/></marker></defs>
-      <rect x="30" y="10" width="560" height="70" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-width="1.5"/>
-      <text x="310" y="36" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">Presentation Layer — Browser</text>
-      <text x="310" y="55" text-anchor="middle" font-size="10" fill="#555">Vue 3 SPA · Vite 8 · Single-File Component (2,602 lines)</text>
-      <text x="310" y="70" text-anchor="middle" font-size="9" fill="#888">Player A (Chrome) · Player B (Safari/iOS) · Player C (Edge) · Spectator</text>
-      <rect x="30" y="115" width="560" height="70" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-width="1.5"/>
-      <text x="310" y="141" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">Network Layer</text>
-      <text x="310" y="160" text-anchor="middle" font-size="10" fill="#555">GitHub Pages (HTTPS) · ngrok TCP Tunnel (WSS)</text>
-      <text x="310" y="175" text-anchor="middle" font-size="9" fill="#888">Agora SD-RTN Cloud Voice (10K min/month free)</text>
-      <rect x="30" y="220" width="560" height="80" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-width="1.5"/>
-      <text x="310" y="246" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">Application Server — Node.js :8080</text>
-      <text x="310" y="265" text-anchor="middle" font-size="10" fill="#555">WebSocket Message Routing · GameRoom FSM ×N</text>
-      <text x="310" y="280" text-anchor="middle" font-size="10" fill="#555">Agora Token Generation (HMAC-SHA1, 24h TTL)</text>
-      <text x="310" y="293" text-anchor="middle" font-size="9" fill="#888">10s timeout deadlock prevention · Exponential backoff reconnection</text>
-      <rect x="30" y="335" width="560" height="55" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-width="1.5"/>
-      <text x="310" y="358" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">Game Engine — Dual-End Deployment</text>
-      <text x="310" y="377" text-anchor="middle" font-size="10" fill="#555">frontend/core/ ↔ server/game/ · HuCalculator · RuleChecker · mjLogic</text>
-      <line x1="310" y1="80" x2="310" y2="113" stroke="#4CAF50" stroke-width="2" marker-end="url(#a)"/>
-      <line x1="310" y1="185" x2="310" y2="218" stroke="#4CAF50" stroke-width="2" marker-end="url(#a)"/>
-      <line x1="310" y1="300" x2="310" y2="333" stroke="#4CAF50" stroke-width="2" marker-end="url(#a)"/>
-      <rect x="610" y="10" width="80" height="70" rx="5" fill="#c8e6c9" stroke="#81c784" stroke-width="1"/>
-      <text x="650" y="50" text-anchor="middle" font-size="8" fill="#2e7d32">Agora SD-RTN</text>
-      <rect x="610" y="115" width="80" height="70" rx="5" fill="#c8e6c9" stroke="#81c784" stroke-width="1"/>
-      <text x="650" y="155" text-anchor="middle" font-size="8" fill="#2e7d32">GitHub Pages</text>
-      <rect x="610" y="220" width="80" height="80" rx="5" fill="#c8e6c9" stroke="#81c784" stroke-width="1"/>
-      <text x="650" y="265" text-anchor="middle" font-size="8" fill="#2e7d32">GitHub Actions</text>
-      <line x1="608" y1="45" x2="592" y2="45" stroke="#a5d6a7" stroke-width="1" stroke-dasharray="3" marker-end="url(#a)"/>
-      <line x1="608" y1="150" x2="592" y2="150" stroke="#a5d6a7" stroke-width="1" stroke-dasharray="3" marker-end="url(#a)"/>
-      <line x1="608" y1="260" x2="592" y2="260" stroke="#a5d6a7" stroke-width="1" stroke-dasharray="3" marker-end="url(#a)"/>
+  <div style="text-align:center;max-width:780px;margin:0 auto;background:#fafcfa;border:1px solid var(--border);border-radius:12px;padding:16px;">
+    <svg viewBox="0 0 760 520" style="width:100%;height:auto;">
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e3f2fd"/><stop offset="100%" stop-color="#bbdefb"/></linearGradient>
+        <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f3e5f5"/><stop offset="100%" stop-color="#e1bee7"/></linearGradient>
+        <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff3e0"/><stop offset="100%" stop-color="#ffe0b2"/></linearGradient>
+        <linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fce4ec"/><stop offset="100%" stop-color="#f8bbd0"/></linearGradient>
+        <filter id="sh"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity=".1"/></filter>
+        <marker id="ar" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#2196F3"/></marker>
+        <marker id="ap" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#9c27b0"/></marker>
+        <marker id="ao" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#ff9800"/></marker>
+        <marker id="ad" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#999"/></marker>
+      </defs>
+      <!-- Layer 1: Browser -->
+      <rect x="40" y="15" width="560" height="85" rx="8" fill="url(#g1)" stroke="#42a5f5" stroke-width="1.8" filter="url(#sh)"/>
+      <rect x="46" y="21" width="548" height="20" rx="4" fill="#1565c0" opacity=".9"/>
+      <text x="320" y="36" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Presentation Layer — Browser</text>
+      <text x="320" y="58" text-anchor="middle" font-size="10.5" fill="#444">Vue 3 SPA · Vite 8 · Single-File Component (2,602 lines)</text>
+      <text x="320" y="74" text-anchor="middle" font-size="9.5" fill="#666">Desktop (Chrome/Edge/Firefox) · Mobile Safari (iOS) · Mobile Chrome (Android)</text>
+      <text x="320" y="90" text-anchor="middle" font-size="9" fill="#888">Drag-to-reorder tiles · Danmaku chat · Emoji interactions · Auto-play (tuoguan)</text>
+      <!-- Layer 2: Network -->
+      <rect x="40" y="135" width="560" height="85" rx="8" fill="url(#g2)" stroke="#ab47bc" stroke-width="1.8" filter="url(#sh)"/>
+      <rect x="46" y="141" width="548" height="20" rx="4" fill="#7b1fa2" opacity=".9"/>
+      <text x="320" y="156" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Network Layer</text>
+      <text x="320" y="178" text-anchor="middle" font-size="10.5" fill="#444">GitHub Pages (HTTPS, Static Assets) · ngrok TCP Tunnel (WSS, Backend)</text>
+      <text x="320" y="194" text-anchor="middle" font-size="9.5" fill="#666">Agora SD-RTN Cloud Voice Relay (10,000 min/month free · Opus 48kHz)</text>
+      <text x="320" y="210" text-anchor="middle" font-size="9" fill="#888">JSON over WebSocket (30 message types) · Exponential backoff reconnection</text>
+      <!-- Layer 3: Server -->
+      <rect x="40" y="255" width="560" height="100" rx="8" fill="url(#g3)" stroke="#ffa726" stroke-width="1.8" filter="url(#sh)"/>
+      <rect x="46" y="261" width="548" height="20" rx="4" fill="#e65100" opacity=".9"/>
+      <text x="320" y="276" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Application Server — Node.js (Port 8080)</text>
+      <text x="320" y="298" text-anchor="middle" font-size="10.5" fill="#444">WebSocket Message Router: create_room · join_room · discard · draw · action · chat · emoji</text>
+      <text x="320" y="314" text-anchor="middle" font-size="9.5" fill="#666">GameRoom FSM: LOBBY → PLAYING → SETTLEMENT (×N concurrent rooms)</text>
+      <text x="320" y="330" text-anchor="middle" font-size="9.5" fill="#666">Agora Token Generator (HMAC-SHA1 · 24h TTL) · 15s Action Timeout Deadlock Prevention</text>
+      <text x="320" y="346" text-anchor="middle" font-size="9" fill="#888">Server-authoritative game logic · Anti-cheat validation · Score synchronization</text>
+      <!-- Layer 4: Engine -->
+      <rect x="40" y="390" width="560" height="65" rx="8" fill="url(#g4)" stroke="#ef5350" stroke-width="1.8" filter="url(#sh)"/>
+      <rect x="46" y="396" width="548" height="20" rx="4" fill="#c62828" opacity=".9"/>
+      <text x="320" y="411" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Game Engine — Dual-End Deployment</text>
+      <text x="320" y="433" text-anchor="middle" font-size="10.5" fill="#444">frontend/src/core/ ↔ server/game/ · HuCalculator (208 lines) · RuleChecker (142 lines) · mjLogic</text>
+      <text x="320" y="449" text-anchor="middle" font-size="9" fill="#888">O(3^k) Recursive Backtracking Win Detection · NPC Heuristic Strategy (227 lines) · Count-Diff Sync</text>
+      <!-- Central arrows -->
+      <line x1="320" y1="100" x2="320" y2="133" stroke="#2196F3" stroke-width="2.5" marker-end="url(#ar)"/>
+      <line x1="320" y1="220" x2="320" y2="253" stroke="#9c27b0" stroke-width="2.5" marker-end="url(#ap)"/>
+      <line x1="320" y1="355" x2="320" y2="388" stroke="#ff9800" stroke-width="2.5" marker-end="url(#ao)"/>
+      <!-- Side panels -->
+      <rect x="625" y="15" width="120" height="85" rx="7" fill="#e1f5fe" stroke="#29b6f6" stroke-width="1.5"/>
+      <text x="685" y="35" text-anchor="middle" font-size="10" font-weight="700" fill="#0277bd">Agora SD-RTN</text>
+      <text x="685" y="52" text-anchor="middle" font-size="8.5" fill="#555">Cloud Voice Relay</text>
+      <text x="685" y="68" text-anchor="middle" font-size="8.5" fill="#555">10K min/month free</text>
+      <text x="685" y="84" text-anchor="middle" font-size="8" fill="#888">Opus 48kHz · AEC/ANS/AGC</text>
+      <rect x="625" y="135" width="120" height="85" rx="7" fill="#fce4ec" stroke="#ec407a" stroke-width="1.5"/>
+      <text x="685" y="155" text-anchor="middle" font-size="10" font-weight="700" fill="#ad1457">GitHub Pages</text>
+      <text x="685" y="172" text-anchor="middle" font-size="8.5" fill="#555">Static Frontend CDN</text>
+      <text x="685" y="188" text-anchor="middle" font-size="8.5" fill="#555">Custom Domain (jaijaic.site)</text>
+      <text x="685" y="204" text-anchor="middle" font-size="8" fill="#888">Auto-deploy via Actions</text>
+      <rect x="625" y="255" width="120" height="100" rx="7" fill="#fff8e1" stroke="#ffb300" stroke-width="1.5"/>
+      <text x="685" y="275" text-anchor="middle" font-size="10" font-weight="700" fill="#e65100">GitHub Actions</text>
+      <text x="685" y="292" text-anchor="middle" font-size="8.5" fill="#555">CI/CD Pipeline</text>
+      <text x="685" y="308" text-anchor="middle" font-size="8.5" fill="#555">Build & Deploy on Push</text>
+      <text x="685" y="324" text-anchor="middle" font-size="8.5" fill="#555">gh-pages Branch Sync</text>
+      <text x="685" y="340" text-anchor="middle" font-size="8" fill="#888">peaceiris/actions-gh-pages</text>
+      <!-- Dashed side arrows -->
+      <line x1="623" y1="55" x2="602" y2="55" stroke="#999" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#ad)"/>
+      <line x1="623" y1="175" x2="602" y2="175" stroke="#999" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#ad)"/>
+      <line x1="623" y1="305" x2="602" y2="305" stroke="#999" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#ad)"/>
     </svg>
   </div>
 </section>
