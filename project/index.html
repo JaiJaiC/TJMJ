@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <meta name="description" content="TJMJ: A Full-Stack Web-Based Taojiang Classic Wang Mahjong Platform for Entertainment &amp; Education">
-  <meta name="keywords" content="Mahjong, WebRTC, Vue 3, Node.js, Multiplayer, Real-time, Game, Taojiang, Wang Mahjong">
-  <title>TJMJ — 桃江经典王麻将 | Full-Stack Web Mahjong Platform</title>
+  <meta name="keywords" content="Mahjong, Agora, Vue 3, Node.js, Multiplayer, Real-time, Game, Taojiang, Wang Mahjong">
+  <title>TJMJ — Taojiang Classic Wang Mahjong | Full-Stack Web Mahjong Platform</title>
   <style>
     :root {
       --primary: #1a472a;
@@ -46,10 +46,6 @@
     section { padding: 40px 0; }
     section h2 { font-size: 1.6em; font-weight: 700; margin-bottom: 18px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; }
     section h3 { font-size: 1.2em; font-weight: 600; margin: 20px 0 10px; color: #2d5a2d; }
-
-    .teaser { text-align:center; background:#fff; padding:30px 20px; }
-    .teaser img, .teaser video { max-width:100%; border-radius:var(--radius); box-shadow:0 4px 20px rgba(0,0,0,.08); }
-    .teaser .caption { font-size:.9em; color:var(--muted); margin-top:10px; }
 
     .abstract { background: var(--card); border-radius: var(--radius); padding: 28px 30px; box-shadow:0 2px 12px rgba(0,0,0,.04); }
     .abstract p { font-size: 1.02em; color: #444; }
@@ -92,138 +88,130 @@
 <!-- ====== Hero ====== -->
 <header class="hero">
   <h1>🀄 TJMJ</h1>
-  <div class="subtitle">桃江经典王麻将 — 全栈实时 Web 麻将平台</div>
+  <div class="subtitle">Taojiang Classic Wang Mahjong — Full-Stack Real-Time Web Mahjong Platform</div>
   <div class="authors">
     <strong>Jintian Xia</strong> &middot; <strong>Siyuan Liu</strong> &middot; <strong>Jianghong Xiang</strong> &middot; <strong>Zhuangwei Zeng</strong> &middot;
     <strong>Jian Hu</strong> &middot; <strong>Yangyang Song</strong> &middot; <strong>Hao Wen</strong> &middot; <strong>Xiaobing Yang</strong> &middot; <strong>Erma Li</strong>
   </div>
   <div class="affil">TJMJ Lab, Taojiang, Hunan, China &ensp; | &ensp; Corresponding Author: <strong>Jaijai C</strong></div>
   <div class="links">
-    <a href="https://jaijaic.github.io/TJMJ/" target="_blank" class="primary">🎮 在线试玩</a>
-    <a href="https://github.com/JaijaiC/TJMJ" target="_blank">📂 GitHub 仓库</a>
-    <a href="TJMJ_Technical_Manual_CN.pdf" target="_blank">📄 技术报告 (PDF)</a>
-    <a href="https://github.com/JaijaiC/TJMJ/raw/main/docs/manual/TJMJ_Technical_Manual_CN.pdf" target="_blank">📥 下载论文</a>
+    <a href="https://jaijaic.github.io/TJMJ/" target="_blank" class="primary">🎮 Play Online</a>
+    <a href="https://github.com/JaijaiC/TJMJ" target="_blank">📂 GitHub Repo</a>
+    <a href="TJMJ_CN.pdf" target="_blank">📄 Technical Report (CN)</a>
+    <a href="TJMJ_EN.pdf" target="_blank">📄 Technical Report (EN)</a>
   </div>
 </header>
 
-<!-- ====== Teaser ====== -->
-<section class="teaser">
-  <div class="container">
-    <video src="showcase.mp4" controls autoplay muted loop playsinline style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);"></video>
-    <div class="caption">▲ TJMJ 联机对战演示：4 人实时麻将 + WebRTC 语音 + 拖拽手牌</div>
-  </div>
-</section>
-
 <!-- ====== Abstract ====== -->
 <section class="container">
-  <h2>📝 摘要</h2>
+  <h2>📝 Abstract</h2>
   <div class="abstract">
     <p>
-      桃江经典王麻将 (TJMJ) 是一款面向湖南桃江地区的全栈网页麻将游戏平台。项目完整实现了桃江地方麻将的核心规则体系——包括<strong>打筛扳王</strong>（癞子动态确定）、<strong>扎鸟翻倍</strong>计分、<strong>门子累加番</strong>型、组合胡法等复杂机制，提供<strong>单机 AI</strong>、<strong>四人联机</strong>、<strong>观战</strong>三种游戏模式。
-      技术架构采用 <strong>Vue 3</strong> Composition API 前端 + <strong>Vite 8</strong> 构建、<strong>Node.js WebSocket</strong> 服务端、<strong>WebRTC P2P</strong> 实时语音（辅以 <strong>Twilio TURN</strong> 中继），前端部署于 GitHub Pages，后端通过 ngrok 公网穿透。
-      核心算法包括 $\mathcal{O}(3^k)$ 递归回溯胡牌判定引擎（实测亚毫秒级）、启发式 NPC 出牌策略、以及计数差分客户端服务端手牌同步算法。
-      项目完全开源（MIT License），总代码量约 <strong>4200 行</strong>，已发布完整中英文技术手册（18 页）。
+      Taojiang Classic Wang Mahjong (TJMJ) is a full-stack web-based mahjong gaming platform designed for the Taojiang region of Hunan Province. The project fully implements the core rule system of Taojiang local mahjong — including <strong>dynamic wildcard determination (Ban Wang)</strong>, <strong>Zha Niao multiplier</strong> scoring, <strong>Menzi cumulative fan</strong> patterns, and combination winning hands — supporting <strong>single-player AI</strong>, <strong>four-player online multiplayer</strong>, and <strong>spectator</strong> modes.
+      The technical architecture adopts a <strong>Vue 3</strong> Composition API frontend with <strong>Vite 8</strong> build tooling, a <strong>Node.js WebSocket</strong> server, and <strong>Agora SD-RTN</strong> cloud-based real-time voice (10,000 min/month free tier). The frontend is deployed on GitHub Pages, with the backend exposed via ngrok TCP tunneling.
+      Core algorithms include an $\mathcal{O}(3^k)$ recursive backtracking winning-hand detection engine (sub-millisecond measured runtime), a heuristic NPC discard strategy, and a count-difference client-server hand-tile synchronization algorithm.
+      The project is fully open-source (MIT License) with approximately <strong>4,200 lines of code</strong>, accompanied by complete technical manuals in both Chinese (30 pages) and English (29 pages).
     </p>
   </div>
 </section>
 
 <!-- ====== Key Metrics ====== -->
 <section class="container">
-  <h2>📊 项目概览</h2>
+  <h2>📊 Project Overview</h2>
   <div class="stats">
-    <div class="stat"><div class="num">4,244</div><div class="label">核心代码行数</div></div>
-    <div class="stat"><div class="num">12</div><div class="label">核心源文件</div></div>
-    <div class="stat"><div class="num">30</div><div class="label">WebSocket 消息类型</div></div>
-    <div class="stat"><div class="num">17</div><div class="label">胡法类型</div></div>
-    <div class="stat"><div class="num">18</div><div class="label">页技术手册</div></div>
+    <div class="stat"><div class="num">4,244</div><div class="label">Core Lines of Code</div></div>
+    <div class="stat"><div class="num">12</div><div class="label">Core Source Files</div></div>
+    <div class="stat"><div class="num">30</div><div class="label">WebSocket Message Types</div></div>
+    <div class="stat"><div class="num">17</div><div class="label">Winning Hand Types</div></div>
+    <div class="stat"><div class="num">30</div><div class="label">Pages (CN Manual)</div></div>
   </div>
 </section>
 
 <!-- ====== Features ====== -->
 <section class="container">
-  <h2>✨ 核心特性</h2>
+  <h2>✨ Key Features</h2>
   <div class="features">
     <div class="feature-card">
-      <h4>🀄 完整桃江规则</h4><p>打筛扳王 · 扎鸟翻倍 · 门子累加番 · 组合胡法 · 108 张精简牌组，与桃江本地玩法高度一致。</p>
+      <h4>🀄 Complete Taojiang Rules</h4><p>Dynamic wildcard (Ban Wang) · Zha Niao multiplier scoring · Menzi cumulative fan patterns · Combination winning hands · 108-tile compact deck, faithfully matching Taojiang local play.</p>
     </div>
     <div class="feature-card">
-      <h4>🌐 全栈 Web 架构</h4><p>Vue 3 Composition API + Vite 8 前端 · Node.js ws 服务端 · JSON over WebSocket 实时通信 · GitHub Pages 部署。</p>
+      <h4>🌐 Full-Stack Web Architecture</h4><p>Vue 3 Composition API + Vite 8 frontend · Node.js ws server · JSON over WebSocket real-time communication · GitHub Pages deployment.</p>
     </div>
     <div class="feature-card">
-      <h4>🎙️ 实时语音</h4><p>WebRTC P2P 全连接网状拓扑 · Opus 48kHz 编码 · Twilio TURN (10GB/月) NAT 穿透 · 增量 PeerConnection 管理。</p>
+      <h4>🎙️ Real-Time Voice</h4><p>Agora SD-RTN cloud relay · Opus 48kHz codec · 10,000 min/month free tier · No P2P NAT issues · Auto channel join on room entry.</p>
     </div>
     <div class="feature-card">
-      <h4>🤖 智能 NPC</h4><p>启发式 AI 出牌策略：听牌优先级评估 · 手牌价值加权排序 · 防守策略 · 吃碰智能决策。</p>
+      <h4>🤖 Intelligent NPC</h4><p>Heuristic AI discard strategy: ting-priority evaluation · hand-tile weighted scoring · defensive play · smart chi/peng decisions.</p>
     </div>
     <div class="feature-card">
-      <h4>📱 跨平台兼容</h4><p>iOS Safari 适配 · Android Chrome dvh 适配 · 桌面端缩放 · 触屏拖拽 · 断线重连 · 10s 操作超时防死锁。</p>
+      <h4>📱 Cross-Platform</h4><p>iOS Safari adaptation · Android Chrome dvh support · Desktop scaling · Touch drag-and-drop · Auto-reconnection · 15s action timeout deadlock prevention.</p>
     </div>
     <div class="feature-card">
-      <h4>🔧 开发者友好</h4><p>完全开源 · 详尽技术文档 (中/英) · TiKZ 架构图 · 算法伪代码 · 完整通信协议表 · 一键启动脚本。</p>
+      <h4>🔧 Developer-Friendly</h4><p>Fully open-source · Comprehensive bilingual documentation · TiKZ architecture diagrams · Algorithm pseudocode · Complete protocol tables · One-click launch script.</p>
     </div>
   </div>
 </section>
 
 <!-- ====== Tech Stack ====== -->
 <section class="container">
-  <h2>🛠️ 技术栈</h2>
+  <h2>🛠️ Technology Stack</h2>
   <div class="tech-grid">
-    <div class="tech-item"><strong>Vue 3.5</strong>前端框架</div>
-    <div class="tech-item"><strong>Vite 8.0</strong>构建工具</div>
-    <div class="tech-item"><strong>Node.js</strong>服务端运行时</div>
-    <div class="tech-item"><strong>ws 8.18</strong>WebSocket 库</div>
-    <div class="tech-item"><strong>WebRTC</strong>实时语音</div>
-    <div class="tech-item"><strong>Twilio TURN</strong>NAT 穿透</div>
-    <div class="tech-item"><strong>GitHub Pages</strong>前端部署</div>
-    <div class="tech-item"><strong>ngrok</strong>后端隧道</div>
-    <div class="tech-item"><strong>Web Speech API</strong>TTS 降级</div>
-    <div class="tech-item"><strong>Web Audio API</strong>BGM 管理</div>
-    <div class="tech-item"><strong>GitHub Actions</strong>CI 构建</div>
-    <div class="tech-item"><strong>LaTeX + TiKZ</strong>技术手册</div>
+    <div class="tech-item"><strong>Vue 3.5</strong>Frontend Framework</div>
+    <div class="tech-item"><strong>Vite 8.0</strong>Build Tool</div>
+    <div class="tech-item"><strong>Node.js</strong>Server Runtime</div>
+    <div class="tech-item"><strong>ws 8.18</strong>WebSocket Library</div>
+    <div class="tech-item"><strong>Agora SD-RTN</strong>Real-Time Voice</div>
+    <div class="tech-item"><strong>GitHub Pages</strong>Frontend Deploy</div>
+    <div class="tech-item"><strong>ngrok</strong>Backend Tunnel</div>
+    <div class="tech-item"><strong>Web Speech API</strong>TTS Fallback</div>
+    <div class="tech-item"><strong>Web Audio API</strong>BGM Manager</div>
+    <div class="tech-item"><strong>GitHub Actions</strong>CI Pipeline</div>
+    <div class="tech-item"><strong>LaTeX + TiKZ</strong>Technical Manuals</div>
+    <div class="tech-item"><strong>agora-access-token</strong>Voice Token</div>
   </div>
 </section>
 
 <!-- ====== Architecture ====== -->
 <section class="container">
-  <h2>🏗️ 系统架构</h2>
-  <p style="text-align:center;color:var(--muted);margin-bottom:16px;">三层 B/S 架构：Vue 3 前端 → WebSocket 通信 → Node.js 服务端 → 双端游戏引擎</p>
+  <h2>🏗️ System Architecture</h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:16px;">Three-tier B/S Architecture: Vue 3 Frontend → WebSocket Communication → Node.js Server → Dual-End Game Engine</p>
   <div style="text-align:center;max-width:700px;margin:0 auto;">
     <pre style="background:#f5f7f5;padding:20px;border-radius:12px;font-size:.78em;line-height:1.6;text-align:left;overflow-x:auto;border:1px solid var(--border);">
 ┌──────────────────────────────────────────────────┐
-│  <b>表示层</b> (Browser)                             │
-│  Vue 3 SPA · Vite 8 · 单文件组件 (2602行)        │
-│  Player A (Chrome)  Player B (Safari/iOS)        │
-│  Player C (Edge)     Spectator (Any)              │
+│  <b>Presentation Layer</b> (Browser)                   │
+│  Vue 3 SPA · Vite 8 · Single-File Component       │
+│  Player A (Chrome)  Player B (Safari/iOS)          │
+│  Player C (Edge)     Spectator (Any)                │
 ├──────────────────────────────────────────────────┤
-│  <b>网络层</b>                                       │
-│  GitHub Pages (HTTPS) · ngrok Tunnel (WSS)       │
-│  WebRTC P2P Mesh · Twilio TURN (10GB/mo)         │
+│  <b>Network Layer</b>                                  │
+│  GitHub Pages (HTTPS) · ngrok Tunnel (WSS)         │
+│  Agora SD-RTN Cloud Voice · 10K min/month free     │
 ├──────────────────────────────────────────────────┤
-│  <b>应用服务器</b> (Node.js :8080)                   │
-│  WebSocket 消息路由 · GameRoom FSM ×N             │
-│  TURN 凭据生成 (HMAC-SHA1, 24h TTL)              │
+│  <b>Application Server</b> (Node.js :8080)             │
+│  WebSocket Message Routing · GameRoom FSM ×N       │
+│  Agora Token Generation (HMAC-SHA1, 24h TTL)       │
 ├──────────────────────────────────────────────────┤
-│  <b>游戏引擎</b> (双端部署)                           │
-│  frontend/core/ ←→ server/game/                  │
-│  HuCalculator · RuleChecker · mjLogic            │
+│  <b>Game Engine</b> (Dual-End Deployment)              │
+│  frontend/core/ ←→ server/game/                    │
+│  HuCalculator · RuleChecker · mjLogic              │
 └──────────────────────────────────────────────────┘</pre>
   </div>
 </section>
 
 <!-- ====== Showcase ====== -->
 <section class="container">
-  <h2>🖼️ 界面展示</h2>
+  <h2>🖼️ Interface Showcase</h2>
   <div class="screenshots">
-    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%23215c32' width='400' height='240' rx='8'/%3E%3Ctext fill='%23fff' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E🀄 麻将对局界面%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3E4人联机 + 实时语音%3C/text%3E%3C/svg%3E" alt="游戏界面"><p style="font-size:.85em;color:var(--muted);margin-top:6px;">联机对战界面</p></div>
-    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%231a1a2e' width='400' height='240' rx='8'/%3E%3Ctext fill='%23ffd700' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E💰 结算界面%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3E赢家亮牌 + 积分展示%3C/text%3E%3C/svg%3E" alt="结算界面"><p style="font-size:.85em;color:var(--muted);margin-top:6px;">本局结算界面</p></div>
-    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%23000' width='400' height='240' rx='8'/%3E%3Ctext fill='%23fff' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E🏠 主菜单界面%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3E模式选择 + 教程文档%3C/text%3E%3C/svg%3E" alt="主菜单"><p style="font-size:.85em;color:var(--muted);margin-top:6px;">首页模式选择</p></div>
+    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%23215c32' width='400' height='240' rx='8'/%3E%3Ctext fill='%23fff' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E🀄 Game Interface%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3E4-Player Online + Voice%3C/text%3E%3C/svg%3E" alt="Game Interface"><p style="font-size:.85em;color:var(--muted);margin-top:6px;">Online Match Interface</p></div>
+    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%231a1a2e' width='400' height='240' rx='8'/%3E%3Ctext fill='%23ffd700' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E💰 Settlement%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3EWinner Reveal + Score Display%3C/text%3E%3C/svg%3E" alt="Settlement"><p style="font-size:.85em;color:var(--muted);margin-top:6px;">Round Settlement</p></div>
+    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%230a3c1e' width='400' height='240' rx='8'/%3E%3Ctext fill='%23fff' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E🏠 Main Menu%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3EMode Selection + Documentation%3C/text%3E%3C/svg%3E" alt="Main Menu"><p style="font-size:.85em;color:var(--muted);margin-top:6px;">Main Menu</p></div>
   </div>
 </section>
 
 <!-- ====== BibTeX ====== -->
 <section class="container">
-  <h2>📚 引用</h2>
-  <p style="color:var(--muted);margin-bottom:12px;">如果您在研究中参考了本项目，请使用以下 BibTeX 引用：</p>
+  <h2>📚 Citation</h2>
+  <p style="color:var(--muted);margin-bottom:12px;">If you reference this project in your research, please use the following BibTeX citation:</p>
   <div class="bibtex">
     <pre>@techreport{tjmj2025,
   title     = {{TJMJ}: A Full-Stack Web-Based Taojiang Classic
@@ -240,23 +228,23 @@
 
 <!-- ====== Links ====== -->
 <section class="container">
-  <h2>🔗 相关链接</h2>
+  <h2>🔗 Links</h2>
   <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;">
-    <a href="https://github.com/JaijaiC/TJMJ" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📂 GitHub 源码仓库</a>
+    <a href="https://github.com/JaijaiC/TJMJ" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📂 GitHub Repository</a>
     <span style="color:var(--muted);">|</span>
-    <a href="https://jaijaic.github.io/TJMJ/" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">🎮 在线试玩 Demo</a>
+    <a href="https://jaijaic.github.io/TJMJ/" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">🎮 Live Demo</a>
     <span style="color:var(--muted);">|</span>
-    <a href="TJMJ_Technical_Manual_CN.pdf" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📄 中文技术手册</a>
+    <a href="TJMJ_CN.pdf" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📄 Chinese Manual (30pp)</a>
     <span style="color:var(--muted);">|</span>
-    <a href="TJMJ_Technical_Manual_EN.pdf" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📄 English Manual</a>
+    <a href="TJMJ_EN.pdf" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📄 English Manual (29pp)</a>
     <span style="color:var(--muted);">|</span>
-    <a href="https://github.com/JaijaiC/TJMJ/blob/main/readme.md" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📖 项目 README</a>
+    <a href="https://github.com/JaijaiC/TJMJ/blob/main/readme.md" target="_blank" style="text-decoration:none;color:var(--primary);font-weight:600;">📖 README</a>
   </div>
 </section>
 
 <footer class="footer">
-  <p>TJMJ &copy; 2024–2026 · 完全开源 · 仅供个人娱乐学习使用<br>
-  本项目不涉及任何商业行为，严禁用于赌博活动。</p>
+  <p>TJMJ &copy; 2024–2026 · Fully Open Source · For Personal Entertainment &amp; Educational Use Only<br>
+  This project involves no commercial activities and is strictly prohibited from gambling use.</p>
   <p style="margin-top:8px;">Template inspired by <a href="https://github.com/eliahuhorwitz/Academic-project-page-template">Academic Project Page Template</a></p>
 </footer>
 
