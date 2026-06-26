@@ -88,12 +88,19 @@
     }
     .arch-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:10px; }
     .arch-item { text-align:center; }
-    .arch-item .img-box { width:100%; aspect-ratio:4/3; overflow:hidden; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,.07); background:#e8f0e8; display:flex; align-items:center; justify-content:center; }
-    .arch-item img { width:100%; height:100%; object-fit:contain; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,.07); transition:transform .2s; }
+    .arch-item .lbl { font-size:.76em; color:var(--muted); margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .arch-item .img-box { width:100%; aspect-ratio:4/3; overflow:hidden; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,.07); background:#e8f0e8; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .arch-item img { width:100%; height:100%; object-fit:contain; transition:transform .2s; }
     .arch-item img:hover { transform:scale(1.06); }
-    .arch-item p { font-size:.76em; color:var(--muted); margin-top:5px; }
     @media(max-width:700px){ .arch-grid { grid-template-columns:repeat(2,1fr); } }
     @media(max-width:480px){ .arch-grid { grid-template-columns:1fr; } }
+    .screenshots .img-box { width:100%; aspect-ratio:16/9; overflow:hidden; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,.07); background:#e8f0e8; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .screenshots img { width:100%; height:100%; object-fit:contain; transition:transform .2s; }
+    .screenshots img:hover { transform:scale(1.05); }
+    .lightbox { display:none; position:fixed; top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center; }
+    .lightbox.show { display:flex; }
+    .lightbox img { max-width:95vw; max-height:95vh; border-radius:8px; }
+    .lightbox .close { position:absolute;top:16px;right:24px;color:#fff;font-size:2em;cursor:pointer; }
   
     @keyframes mahjongRain { 0% { transform:translateY(-10vh) rotate(0deg); opacity:1; } 100% { transform:translateY(110vh) rotate(360deg); opacity:.3; } }
     .mj-rain { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
@@ -175,21 +182,21 @@
 <section class="container">
   <h2>🏗️ System Architecture</h2>
   <div class="arch-grid">
-    <div class="arch-item"><img src="images/1.System Architecture Overview.png" alt="Main Menu"><p>System Architecture — Three-tier B/S overview</p></div>
-    <div class="arch-item"><img src="images/2.Frontend Component Dependency Graph.png" alt="Frontend Components"><p>Frontend Components — Vue 3 SPA dependency graph</p></div>
-    <div class="arch-item"><img src="images/2.单机模式对局过程.png" alt="Gameplay"><p>Round Settlement — Hands revealed, winner highlighted</p></div>
-    <div class="arch-item"><img src="images/3. Backend Service Architecture.png" alt="Backend Architecture"><p>Backend Services — WebSocket + GameRoom FSM</p></div>
-    <div class="arch-item"><img src="images/5.Agora Cloud Voice Architecture.png" alt="Agora Voice"><p>Agora Voice — Cloud relay architecture</p></div>
-    <div class="arch-item"><img src="images/6.Deployment Architecture.png" alt="Deployment"><p>Deployment — GitHub Pages + ngrok + Actions</p></div>
+    <div class="arch-item"><div class="lbl">System Architecture Overview</div><div class="img-box" onclick="zoom(this)"><img src="images/1.System Architecture Overview.png" alt="Architecture"></div></div>
+    <div class="arch-item"><div class="lbl">Frontend Component Graph</div><div class="img-box" onclick="zoom(this)"><img src="images/2.Frontend Component Dependency Graph.png" alt="Frontend"></div></div>
+    <div class="arch-item"><div class="lbl">Communication Protocol Stack</div><div class="img-box" onclick="zoom(this)"><img src="images/4.Communication Protocol Stack.png" alt="Protocol"></div></div>
+    <div class="arch-item"><div class="lbl">Backend Service Architecture</div><div class="img-box" onclick="zoom(this)"><img src="images/3. Backend Service Architecture.png" alt="Backend"></div></div>
+    <div class="arch-item"><div class="lbl">Agora Cloud Voice</div><div class="img-box" onclick="zoom(this)"><img src="images/5.Agora Cloud Voice Architecture.png" alt="Voice"></div></div>
+    <div class="arch-item"><div class="lbl">Deployment Architecture</div><div class="img-box" onclick="zoom(this)"><img src="images/6.Deployment Architecture.png" alt="Deploy"></div></div>
   </div>
 </section>
 
 <section class="container">
   <h2>🖼️ Interface</h2>
   <div class="screenshots">
-    <div><img src="images/Main Menu.png" alt="Main Menu"><p>Main Menu — Mode selection, docs, BGM</p></div>
-    <div><img src="images/Game Interface.jpg" alt="Game Interface"><p>Game Interface — 4-player online match</p></div>
-    <div><img src="images/Settlement.png" alt="Settlement"><p>Settlement — Winner reveal + scores</p></div>
+    <div><div class="lbl">Main Menu</div><div class="img-box" onclick="zoom(this)"><img src="images/Main Menu.png" alt="Main Menu"></div></div>
+    <div><div class="lbl">Game Interface</div><div class="img-box" onclick="zoom(this)"><img src="images/Game Interface.jpg" alt="Game Interface"></div></div>
+    <div><div class="lbl">Round Settlement</div><div class="img-box" onclick="zoom(this)"><img src="images/Settlement.png" alt="Settlement"></div></div>
   </div>
 </section>
 <section class="container">
@@ -207,6 +214,8 @@
   </div>
 </section>
 
+<div class="lightbox" id="lb" onclick="this.classList.remove('show')"><span class="close">&times;</span><img id="lb-img" src="" alt=""></div>
+<script>function zoom(el){var s=el.querySelector('img').src;document.getElementById('lb-img').src=s;document.getElementById('lb').classList.add('show')}</script>
 <footer class="footer">
   <p>TJMJ &copy; 2024–2026 · Fully Open Source · For Personal Entertainment &amp; Education Only</p>
   <p style="margin-top:6px;">Template: <a href="https://github.com/eliahuhorwitz/Academic-project-page-template">Academic Project Page</a></p>
