@@ -86,6 +86,10 @@
       .stats { gap:20px; }
       .stat .num { font-size:1.6em; }
     }
+  
+    @keyframes mahjongRain { 0% { transform:translateY(-10vh) rotate(0deg); opacity:1; } 100% { transform:translateY(110vh) rotate(360deg); opacity:.3; } }
+    .mj-rain { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
+    .mj-drop { position:absolute; font-size:1.8em; animation:mahjongRain linear infinite; }
   </style>
 </head>
 <body>
@@ -162,88 +166,24 @@
 
 <section class="container">
   <h2>🏗️ System Architecture</h2>
-  <div style="text-align:center;max-width:780px;margin:0 auto;background:#f6faf6;border:1px solid var(--border);border-radius:12px;padding:16px;">
-    <svg viewBox="0 0 760 520" style="width:100%;height:auto;">
-      <defs>
-        <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8f5e9"/><stop offset="100%" stop-color="#c8e6c9"/></linearGradient>
-        <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dcedc8"/><stop offset="100%" stop-color="#aed581"/></linearGradient>
-        <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c5e1a5"/><stop offset="100%" stop-color="#8bc34a"/></linearGradient>
-        <linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#a5d6a7"/><stop offset="100%" stop-color="#66bb6a"/></linearGradient>
-        <filter id="sh"><feDropShadow dx="0" dy="1.5" stdDeviation="2.5" flood-opacity=".12"/></filter>
-        <marker id="a1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#43a047"/></marker>
-        <marker id="a2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#689f38"/></marker>
-        <marker id="a3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#7cb342"/></marker>
-        <marker id="ad" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#a5d6a7"/></marker>
-      </defs>
-      <!-- Layer 1: Browser (lightest green) -->
-      <rect x="40" y="15" width="560" height="85" rx="8" fill="url(#g1)" stroke="#81c784" stroke-width="1.8" filter="url(#sh)"/>
-      <rect x="46" y="21" width="548" height="20" rx="4" fill="#2e7d32" opacity=".88"/>
-      <text x="320" y="36" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Presentation Layer — Browser</text>
-      <text x="320" y="58" text-anchor="middle" font-size="10.5" fill="#2e7d32">Vue 3 SPA · Vite 8 · Single-File Component (2,602 lines)</text>
-      <text x="320" y="74" text-anchor="middle" font-size="9.5" fill="#555">Desktop (Chrome/Edge/Firefox) · Mobile Safari (iOS) · Mobile Chrome (Android)</text>
-      <text x="320" y="90" text-anchor="middle" font-size="9" fill="#777">Drag-to-reorder tiles · Danmaku chat · Emoji interactions · Auto-play (tuoguan)</text>
-      <!-- Layer 2: Network -->
-      <rect x="40" y="135" width="560" height="85" rx="8" fill="url(#g2)" stroke="#aed581" stroke-width="1.8" filter="url(#sh)"/>
-      <rect x="46" y="141" width="548" height="20" rx="4" fill="#33691e" opacity=".88"/>
-      <text x="320" y="156" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Network Layer</text>
-      <text x="320" y="178" text-anchor="middle" font-size="10.5" fill="#33691e">GitHub Pages (HTTPS, Static Assets) · ngrok TCP Tunnel (WSS, Backend)</text>
-      <text x="320" y="194" text-anchor="middle" font-size="9.5" fill="#555">Agora SD-RTN Cloud Voice Relay (10,000 min/month free · Opus 48kHz)</text>
-      <text x="320" y="210" text-anchor="middle" font-size="9" fill="#777">JSON over WebSocket (30 message types) · Exponential backoff reconnection</text>
-      <!-- Layer 3: Server -->
-      <rect x="40" y="255" width="560" height="100" rx="8" fill="url(#g3)" stroke="#9ccc65" stroke-width="1.8" filter="url(#sh)"/>
-      <rect x="46" y="261" width="548" height="20" rx="4" fill="#558b2f" opacity=".88"/>
-      <text x="320" y="276" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Application Server — Node.js (Port 8080)</text>
-      <text x="320" y="298" text-anchor="middle" font-size="10.5" fill="#33691e">WebSocket Message Router: create_room · join_room · discard · draw · action · chat · emoji</text>
-      <text x="320" y="314" text-anchor="middle" font-size="9.5" fill="#555">GameRoom FSM: LOBBY → PLAYING → SETTLEMENT (×N concurrent rooms)</text>
-      <text x="320" y="330" text-anchor="middle" font-size="9.5" fill="#555">Agora Token Generator (HMAC-SHA1 · 24h TTL) · 15s Action Timeout Deadlock Prevention</text>
-      <text x="320" y="346" text-anchor="middle" font-size="9" fill="#777">Server-authoritative game logic · Anti-cheat validation · Score synchronization</text>
-      <!-- Layer 4: Engine (darkest green) -->
-      <rect x="40" y="390" width="560" height="65" rx="8" fill="url(#g4)" stroke="#66bb6a" stroke-width="1.8" filter="url(#sh)"/>
-      <rect x="46" y="396" width="548" height="20" rx="4" fill="#1b5e20" opacity=".88"/>
-      <text x="320" y="411" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Game Engine — Dual-End Deployment</text>
-      <text x="320" y="433" text-anchor="middle" font-size="10.5" fill="#1b5e20">frontend/src/core/ ↔ server/game/ · HuCalculator (208 lines) · RuleChecker (142 lines) · mjLogic</text>
-      <text x="320" y="449" text-anchor="middle" font-size="9" fill="#666">O(3^k) Recursive Backtracking Win Detection · NPC Heuristic Strategy (227 lines) · Count-Diff Sync</text>
-      <!-- Central arrows (green gradient tones) -->
-      <line x1="320" y1="100" x2="320" y2="133" stroke="#43a047" stroke-width="2.5" marker-end="url(#a1)"/>
-      <line x1="320" y1="220" x2="320" y2="253" stroke="#689f38" stroke-width="2.5" marker-end="url(#a2)"/>
-      <line x1="320" y1="355" x2="320" y2="388" stroke="#7cb342" stroke-width="2.5" marker-end="url(#a3)"/>
-      <!-- Side panels (green family) -->
-      <rect x="625" y="15" width="120" height="85" rx="7" fill="#e8f5e9" stroke="#81c784" stroke-width="1.5"/>
-      <text x="685" y="32" text-anchor="middle" font-size="10" font-weight="700" fill="#2e7d32">Agora SD-RTN</text>
-      <text x="685" y="49" text-anchor="middle" font-size="8.5" fill="#555">Cloud Voice Relay</text>
-      <text x="685" y="65" text-anchor="middle" font-size="8.5" fill="#555">10K min/month free</text>
-      <text x="685" y="81" text-anchor="middle" font-size="8" fill="#888">Opus 48kHz · AEC/ANS/AGC</text>
-      <text x="685" y="95" text-anchor="middle" font-size="8" fill="#aaa">HMAC-SHA1 Token Auth</text>
-      <rect x="625" y="135" width="120" height="85" rx="7" fill="#dcedc8" stroke="#aed581" stroke-width="1.5"/>
-      <text x="685" y="152" text-anchor="middle" font-size="10" font-weight="700" fill="#33691e">GitHub Pages</text>
-      <text x="685" y="169" text-anchor="middle" font-size="8.5" fill="#555">Static Frontend CDN</text>
-      <text x="685" y="185" text-anchor="middle" font-size="8.5" fill="#555">Custom Domain</text>
-      <text x="685" y="201" text-anchor="middle" font-size="8.5" fill="#555">jaijaic.site</text>
-      <text x="685" y="215" text-anchor="middle" font-size="8" fill="#aaa">Auto-deploy via Actions</text>
-      <rect x="625" y="255" width="120" height="100" rx="7" fill="#c5e1a5" stroke="#9ccc65" stroke-width="1.5"/>
-      <text x="685" y="272" text-anchor="middle" font-size="10" font-weight="700" fill="#558b2f">GitHub Actions</text>
-      <text x="685" y="289" text-anchor="middle" font-size="8.5" fill="#555">CI/CD Pipeline</text>
-      <text x="685" y="305" text-anchor="middle" font-size="8.5" fill="#555">Build & Deploy</text>
-      <text x="685" y="321" text-anchor="middle" font-size="8.5" fill="#555">gh-pages Branch Sync</text>
-      <text x="685" y="337" text-anchor="middle" font-size="8.5" fill="#555">peaceiris/gh-pages</text>
-      <text x="685" y="351" text-anchor="middle" font-size="8" fill="#aaa">Push-to-Deploy</text>
-      <!-- Dashed side arrows -->
-      <line x1="623" y1="55" x2="602" y2="55" stroke="#a5d6a7" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#ad)"/>
-      <line x1="623" y1="175" x2="602" y2="175" stroke="#a5d6a7" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#ad)"/>
-      <line x1="623" y1="305" x2="602" y2="305" stroke="#a5d6a7" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#ad)"/>
-    </svg>
+  <div class="arch-grid">
+    <div class="arch-item"><img src="images/1.主界面.png" alt="Main Menu"><p>Main Menu — Mode selection, docs, BGM control</p></div>
+    <div class="arch-item"><img src="images/2.单机模式.png" alt="Single Player"><p>Single Player — vs 3 AI, full game interface</p></div>
+    <div class="arch-item"><img src="images/2.单机模式对局过程.png" alt="Gameplay"><p>Round Settlement — Hands revealed, winner highlighted</p></div>
+    <div class="arch-item"><img src="images/3.联机大厅.png" alt="Lobby"><p>Online Lobby — 4-digit codes, Agora voice</p></div>
+    <div class="arch-item"><img src="images/5.观战模式.png" alt="Spectator"><p>Spectator Mode — Watch live, switch perspectives</p></div>
+    <div class="arch-item"><img src="images/功能介绍：游戏界面右上角按钮和对局情况.png" alt="Controls"><p>Game Controls — BGM, mic, chat, network signal</p></div>
   </div>
 </section>
 
 <section class="container">
   <h2>🖼️ Interface</h2>
   <div class="screenshots">
-    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Crect fill='%23215c32' width='400' height='240' rx='8'/%3E%3Ctext fill='%23fff' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E🀄 Game Interface%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3E4-Player + Voice%3C/text%3E%3C/svg%3E" alt=""><p style="font-size:.78em;color:var(--muted);margin-top:4px;">Online Match</p></div>
-    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Crect fill='%231a1a2e' width='400' height='240' rx='8'/%3E%3Ctext fill='%23ffd700' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E💰 Settlement%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3EWinner + Scores%3C/text%3E%3C/svg%3E" alt=""><p style="font-size:.78em;color:var(--muted);margin-top:4px;">Round Settlement</p></div>
-    <div style="text-align:center"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240'%3E%3Crect fill='%230a3c1e' width='400' height='240' rx='8'/%3E%3Ctext fill='%23fff' font-size='18' font-family='sans-serif' text-anchor='middle' x='200' y='110'%3E🏠 Main Menu%3C/text%3E%3Ctext fill='%23aaa' font-size='12' text-anchor='middle' x='200' y='135'%3EMode Selection%3C/text%3E%3C/svg%3E" alt=""><p style="font-size:.78em;color:var(--muted);margin-top:4px;">Main Menu</p></div>
+    <div><img src="images/功能介绍：头像选择.png" alt="Avatar"><p>Avatar Picker — 12 presets + custom upload</p></div>
+    <div><img src="images/功能介绍：手动支付给分.png" alt="Payment"><p>Manual Payment — Numpad score transfer</p></div>
+    <div><img src="images/功能介绍：点击玩家头像交互.png" alt="Emoji"><p>Emoji Interactions — Flying animations + tips</p></div>
   </div>
 </section>
-
 <section class="container">
   <h2>📚 Citation</h2>
   <p style="color:var(--muted);font-size:.85em;margin-bottom:10px;">If you reference this project, please cite:</p>
@@ -264,5 +204,17 @@
   <p style="margin-top:6px;">Template: <a href="https://github.com/eliahuhorwitz/Academic-project-page-template">Academic Project Page</a></p>
 </footer>
 
+<div class="mj-rain">
+    <span class="mj-drop" style="left:5%;animation-duration:8s;animation-delay:0s">🀫</span>
+    <span class="mj-drop" style="left:15%;animation-duration:10s;animation-delay:2s">🀀</span>
+    <span class="mj-drop" style="left:25%;animation-duration:7s;animation-delay:4s">🀁</span>
+    <span class="mj-drop" style="left:35%;animation-duration:11s;animation-delay:1s">🀂</span>
+    <span class="mj-drop" style="left:45%;animation-duration:9s;animation-delay:3s">🀃</span>
+    <span class="mj-drop" style="left:55%;animation-duration:8s;animation-delay:5s">🀄</span>
+    <span class="mj-drop" style="left:65%;animation-duration:12s;animation-delay:0s">🀅</span>
+    <span class="mj-drop" style="left:75%;animation-duration:7s;animation-delay:2s">🀆</span>
+    <span class="mj-drop" style="left:85%;animation-duration:10s;animation-delay:4s">🀇</span>
+    <span class="mj-drop" style="left:92%;animation-duration:9s;animation-delay:1s">🀈</span>
+  </div>
 </body>
 </html>
