@@ -6,7 +6,7 @@
   <meta name="description" content="TJMJ: A Full-Stack Web-Based Taojiang Classic Wang Mahjong Platform for Entertainment &amp; Education">
   <meta name="keywords" content="Mahjong, Agora, Vue 3, Node.js, Multiplayer, Real-time, Game, Taojiang, Wang Mahjong">
   <title>TJMJ</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect fill='%231a472a' width='64' height='64' rx='12'/%3E%3Ctext fill='%23d4a853' font-size='44' font-family='serif' text-anchor='middle' x='32' y='48'%3E发%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect fill='%23f5f0e0' width='64' height='64' rx='8' stroke='%23c8a84e' stroke-width='2'/%3E%3Crect fill='none' x='2' y='2' width='60' height='60' rx='6' stroke='%23fff8' stroke-width='1'/%3E%3Ctext fill='%23c41e1e' font-size='40' font-family='serif' font-weight='bold' text-anchor='middle' x='32' y='46'%3E發%3C/text%3E%3C/svg%3E">
   <style>
     :root {
       --primary: #1a472a;
@@ -43,14 +43,16 @@
     .hero > * { position: relative; z-index: 1; }
     .hero h1 { font-size: clamp(2.4em, 6vw, 4.2em); font-weight: 900; margin-bottom: 6px; letter-spacing: 3px; }
     .hero h1 .mj {
-      display: inline-block; width: 1.2em; height: 1.3em; line-height:1.3em;
-      background: linear-gradient(180deg, #4a8c4a 0%, #2d6b2d 50%, #1a5c1a 100%);
-      border: 3px solid #c8a84e; border-radius: 6px;
-      color: #e63946; font-family: 'KaiTi','STKaiti','SimSun',serif;
-      font-size: .85em; font-weight: 900;
-      text-shadow: 1px 1px 0 #fff8, -1px -1px 0 #0003;
-      box-shadow: 2px 3px 0 #0d3d0d, 4px 6px 12px rgba(0,0,0,.3);
-      vertical-align: middle; margin-right: 6px;
+      display: inline-block; width: 1.3em; height: 1.45em; line-height:1.45em; text-align:center;
+      background: linear-gradient(180deg, #fefdf6 0%, #f5f0e0 30%, #e8dfc8 60%, #ddd4b8 100%);
+      border-radius: 5px;
+      color: #c41e1e; font-family: 'KaiTi','STKaiti','SimSun',serif;
+      font-size: .9em; font-weight: 900;
+      box-shadow:
+        inset 1px 1px 0 #fff, inset -2px -2px 3px rgba(0,0,0,.15),
+        2px 3px 0 #b8a880, 3px 5px 10px rgba(0,0,0,.35);
+      vertical-align: middle; margin-right: 8px;
+      text-shadow: 1px 1px 0 rgba(255,255,255,.5);
     }
     .hero .subtitle { font-size: clamp(1em, 2.2vw, 1.25em); opacity: 0.9; margin-bottom: 28px; font-weight: 700; letter-spacing: .5px; max-width: 640px; }
     .hero .authors { font-size: clamp(.82em, 1.5vw, .95em); opacity: 0.7; margin-bottom: 4px; line-height: 1.8; max-width: 650px; }
@@ -121,7 +123,7 @@
 
 <!-- ====== Hero ====== -->
 <header class="hero">
-  <h1><span class="mj">发</span> TJMJ</h1>
+  <h1><span class="mj">發</span> TJMJ</h1>
   <div class="subtitle">Taojiang Classic Wang Mahjong — Full-Stack Real-Time Web Mahjong Platform</div>
   <div class="authors">
     Jintian Xia &middot; Siyuan Liu &middot; Jianghong Xiang &middot; Zhuangwei Zeng &middot;
