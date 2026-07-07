@@ -306,17 +306,19 @@
               :style="{ '--tx': fly.tx + 'px', '--ty': fly.ty + 'px' }">{{ fly.icon }}</span>
 
         <div class="action-buttons" v-show="gameState.gamePhase === 'PLAYING'">
-          <!-- 吃牌多选：显示所有可选吃法 -->
-          <template v-if="actionState.canChi && actionState.chiCombinations.length > 1">
-            <div v-for="(combo, idx) in actionState.chiCombinations" :key="'chi'+idx"
-                 class="action-btn chi active" @click="handleChiWithCombo(combo)">
-              吃{{ getChiLabel(combo) }}
-            </div>
+          <!-- 只显示当前真正可执行的吃/碰/杠/胡，避免无效按钮常亮或误导 -->
+          <template v-if="actionState.canChi">
+            <template v-if="actionState.chiCombinations.length > 1">
+              <div v-for="(combo, idx) in actionState.chiCombinations" :key="'chi'+idx"
+                   class="action-btn chi active" @click="handleChiWithCombo(combo)">
+                吃{{ getChiLabel(combo) }}
+              </div>
+            </template>
+            <button v-else class="action-btn chi active" @click="handleChi">吃</button>
           </template>
-          <button v-else class="action-btn chi" :class="{ 'active': actionState.canChi }" @click="handleChi">吃</button>
-          <button class="action-btn peng" :class="{ 'active': actionState.canPeng }" @click="handlePeng">碰</button>
-          <button class="action-btn gang" :class="{ 'active': actionState.canGang }" @click="handleGang">杠</button>
-          <button class="action-btn hu" :class="{ 'active': actionState.canHu || (gameState.currentPlayerIndex === 0 && gameState.handTiles.length % 3 === 2) }" @click="handleHu">胡</button>
+          <button v-if="actionState.canPeng" class="action-btn peng active" @click="handlePeng">碰</button>
+          <button v-if="actionState.canGang" class="action-btn gang active" @click="handleGang">杠</button>
+          <button v-if="actionState.canHu || actionState.canSelfHu" class="action-btn hu active" @click="handleHu">胡</button>
           <button class="action-btn tuo" :class="{ 'active': tuoguan }" @click="toggleTuoguan" title="托管自动出牌">托</button>
           <button class="action-btn pass active" v-if="actionState.isWaiting" @click="passAction">过</button>
         </div>
@@ -590,6 +592,31 @@ watch(() => gameState.gamePhase, (phase) => {
   if (phase === 'PLAYING') startAutoDanmaku();
   else stopAutoDanmaku();
 });
+const actionState = reactive({
+  isWaiting: false, targetTile: null, sourceIndex: -1,
+  canChi: false, chiCombinations: [], canPeng: false, canGang: false, canHu: false, canSelfHu: false
+});
+
+const clearActionPrompt = () => {
+  actionState.isWaiting = false;
+  actionState.targetTile = null;
+  actionState.sourceIndex = -1;
+  actionState.canChi = false;
+  actionState.chiCombinations = [];
+  actionState.canPeng = false;
+  actionState.canGang = false;
+  actionState.canHu = false;
+};
+
+const updateSelfActionHints = () => {
+  if (actionState.isWaiting || gameState.gamePhase !== 'PLAYING' || !isMyTurn()) {
+    actionState.canSelfHu = false;
+    return;
+  }
+  actionState.canSelfHu = HuCalculator.checkHu(gameState.handTiles, gameState.wangTile, gameState.diTile, false).canHu;
+  actionState.canGang = RuleChecker.canAnGang(gameState.handTiles, gameState.wangTile).length > 0;
+};
+
 // 托管模式：轮到自己时自动出牌
 watch(() => gameState.currentPlayerIndex, () => {
   if (tuoguan.value && isMyTurn()) {
@@ -743,11 +770,6 @@ const sendEmoji = (icon) => {
     flyingEmojis.value = flyingEmojis.value.filter(f => f.id !== id);
   }, 800);
 };
-
-const actionState = reactive({
-  isWaiting: false, targetTile: null, sourceIndex: -1,
-  canChi: false, chiCombinations: [], canPeng: false, canGang: false, canHu: false
-});
 
 // 托管模式：自动出牌
 const tuoguan = ref(false);
@@ -1327,6 +1349,8 @@ const setupNetworkListeners = () => {
 
   on('game_start', (msg) => {
     gameState.gamePhase = 'PLAYING';
+    clearActionPrompt();
+    actionState.canSelfHu = false;
     gameState.discards = [];
     gameState.exposed = [[], [], [], []];
     gameState.handTiles = msg.hand;
@@ -1344,6 +1368,7 @@ const setupNetworkListeners = () => {
       gameState.players[i].name = p.name || gameState.players[i].name;
       gameState.players[i].avatar = p.avatar || gameState.players[i].avatar;
     });
+    updateSelfActionHints();
   });
 
   on('game_state', (msg) => {
@@ -1382,16 +1407,22 @@ const setupNetworkListeners = () => {
       } else {
         gameState.handTiles = msg.hand || [];
       }
+      updateSelfActionHints();
     }
   });
 
   on('your_turn', (msg) => {
     gameState.currentPlayerIndex = msg.playerIndex ?? 0;
+    updateSelfActionHints();
   });
 
   on('drew_tile', (msg) => {
     gameState.handTiles.push(msg.tile); // 放最右边，不排序
-    actionState.canGang = false;
+    updateSelfActionHints();
+  });
+
+  on('can_zimo', (msg) => {
+    actionState.canSelfHu = !!msg.canHu;
   });
 
   on('action_prompt', (msg) => {
@@ -1402,6 +1433,7 @@ const setupNetworkListeners = () => {
     actionState.canPeng = msg.canPeng;
     actionState.canChi = msg.canChi;
     actionState.chiCombinations = msg.chiCombinations || [];
+    actionState.canSelfHu = false;
     actionState.isWaiting = true;
   });
 
@@ -1521,9 +1553,8 @@ const startNextRoundFromShowdown = () => {
 };
 
 const startRound = () => {
-  actionState.isWaiting = false;
-  actionState.targetTile = null;
-  actionState.canChi = actionState.canPeng = actionState.canGang = actionState.canHu = false;
+  clearActionPrompt();
+  actionState.canSelfHu = false;
 
   gameState.gamePhase = 'PLAYING';
   gameState.readyStatus = [false, false, false, false];
@@ -1597,6 +1628,7 @@ const startRound = () => {
       console.log(`【起手报听】${gameState.players[p].name} 起手听牌！`);
     }
   }
+  updateSelfActionHints();
 };
 
 const physicalDraw = () => {
@@ -1627,7 +1659,7 @@ const drawTile = (playerIndex) => {
   const newTile = physicalDraw();
   if (playerIndex === 0) {
     gameState.handTiles.push(newTile);
-    actionState.canGang = RuleChecker.canAnGang(gameState.handTiles, gameState.wangTile).length > 0;
+    updateSelfActionHints();
   } else {
     gameState.npcHands[playerIndex].push(newTile);
     gameState.npcTileCounts[playerIndex] = gameState.npcHands[playerIndex].length;
@@ -1753,6 +1785,8 @@ const playTile = (index) => {
   handTileIds.splice(index, 1); // 同步稳定ID
   // 不排序，保留玩家手动拖拽的顺序
   gameState.selectedTileIndex = -1;
+  actionState.canSelfHu = false;
+  actionState.canGang = false;
   clearTimeout(turnTimer);
   playDong();
   speakTile(val); // 播报牌名
@@ -1804,7 +1838,7 @@ const handleTileDiscarded = (sourceIndex, targetTile) => {
     if (RuleChecker.canPeng(hand, targetTile)) intercepts.peng.push(p);
 
     if (i === 1) { 
-       let combos = RuleChecker.canChi(hand, targetTile);
+       let combos = RuleChecker.canChi(hand, targetTile, gameState.wangTile);
        if (combos) {
           intercepts.chi.push(p);
           if (p === 0) actionState.chiCombinations = combos;
@@ -1890,7 +1924,7 @@ const executeNpcAction = (npcIndex, actionType, targetTile, discarderIndex = -1)
        speak('peng');
        setTimeout(() => npcPlayPhase(npcIndex), 800);
     } else if (actionType === 'chi') {
-       let combos = RuleChecker.canChi(hand, targetTile);
+       let combos = RuleChecker.canChi(hand, targetTile, gameState.wangTile);
        // 使用AI策略选择最优吃法
        const strategy = new NpcStrategy(hand, gameState.wangTile, gameState.exposed[npcIndex], gameState.discards, gameState.deckRemaining);
        let combo = strategy.shouldChi(combos, targetTile) || combos[0];
@@ -1910,7 +1944,7 @@ const handlePeng = () => {
   const target = actionState.targetTile;
   if (gameMode.value === 'multi') {
     multiAction('peng');
-    actionState.isWaiting = false;
+    clearActionPrompt();
     return;
   }
   for(let i=0; i<2; i++) {
@@ -1927,14 +1961,14 @@ const handlePeng = () => {
 
 const handleChi = () => {
   // 单一吃法时直接调用
-  if (!actionState.canChi) return;
+  if (!actionState.canChi || actionState.chiCombinations.length === 0) return;
   handleChiWithCombo(actionState.chiCombinations[0]);
 };
 
 const handleChiWithCombo = (combo) => {
   if (gameMode.value === 'multi') {
     multiAction('chi', combo);
-    actionState.isWaiting = false;
+    clearActionPrompt();
     return;
   }
   const target = actionState.targetTile;
@@ -1968,7 +2002,7 @@ const handleGang = () => {
   if (!actionState.canGang) return;
   if (gameMode.value === 'multi') {
     multiAction('gang');
-    actionState.isWaiting = false;
+    clearActionPrompt();
     return;
   }
   let gangTile = null; let type = '';
@@ -2006,8 +2040,8 @@ const handleGang = () => {
 };
 
 const passAction = () => {
-  actionState.isWaiting = false;
-  actionState.canChi = actionState.canPeng = actionState.canGang = actionState.canHu = false;
+  clearActionPrompt();
+  actionState.canSelfHu = false;
   if (gameMode.value === 'multi') { multiPass(); return; }
   nextTurn();
 };
@@ -2138,11 +2172,13 @@ const finalizeHu = (playerIndex, huResult, isSelfDraw, sourceDiscarderIndex = -1
 };
 
 const handleHu = () => {
-  if (!actionState.canHu && !(isMyTurn() && gameState.handTiles.length % 3 === 2)) return;
+  const localSelfHu = isMyTurn() && HuCalculator.checkHu(gameState.handTiles, gameState.wangTile, gameState.diTile, false).canHu;
+  if (!actionState.canHu && !actionState.canSelfHu && !localSelfHu) return;
 
   if (gameMode.value === 'multi') {
     multiAction('hu');
-    actionState.isWaiting = false;
+    clearActionPrompt();
+    actionState.canSelfHu = false;
     return;
   }
 
@@ -2175,8 +2211,8 @@ const handleDiHuDrag = () => {
 };
 
 const nextTurn = () => {
-  actionState.isWaiting = false;
-  actionState.canChi = actionState.canPeng = actionState.canGang = actionState.canHu = false;
+  clearActionPrompt();
+  actionState.canSelfHu = false;
   gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % 4;
   startTurnTimer();
   const delay = gameMode.value === 'spectate' ? 150 : 500;

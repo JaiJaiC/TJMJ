@@ -117,10 +117,19 @@ export class RuleChecker {
    * 规则：手里的两张牌和打出的牌能凑成顺子 (不能用王代替，必须是真牌)
    * @returns {Array|false} 返回所有能吃的组合 [ [...2cards], ... ]
    */
-  static canChi(handTiles, targetTile) {
+  static canChi(handTiles, targetTile, wangTile = null) {
+    // 吃必须是同一花色的真实顺子；王不能作为吃牌替代，也不能吃别人打出的王。
+    if (!targetTile || targetTile === wangTile) return false;
+    const suit = Math.floor(targetTile / 10);
+    const isValidSameSuit = (tile) => (
+      tile !== wangTile &&
+      Math.floor(tile / 10) === suit &&
+      tile % 10 >= 1 && tile % 10 <= 9
+    );
+
     // 提取手牌中所有的唯一牌值（去重，方便判断）
-    const uniqueTiles = [...new Set(handTiles)];
-    const has = (tile) => uniqueTiles.includes(tile);
+    const uniqueTiles = [...new Set(handTiles.filter(isValidSameSuit))];
+    const has = (tile) => isValidSameSuit(tile) && uniqueTiles.includes(tile);
 
     let combinations = [];
 

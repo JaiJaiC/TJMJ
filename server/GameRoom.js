@@ -168,6 +168,13 @@ export class GameRoom {
     // 广播公共状态 + 通知庄家出牌
     this.broadcastPublic();
     this.sendTo(0, { type: 'your_turn', playerIndex: 0 });
+    this.notifySelfHu(0);
+  }
+
+  notifySelfHu(playerIndex) {
+    const huCheck = HuCalculator.checkHu(this.hands[playerIndex], this.wangTile, this.diTile, false);
+    this.sendTo(playerIndex, { type: 'can_zimo', canHu: huCheck.canHu, result: huCheck });
+    return huCheck;
   }
 
   physicalDraw() {
@@ -212,36 +219,58 @@ export class GameRoom {
     this.broadcastPublic();
 
     // 自摸检测
-    const huCheck = HuCalculator.checkHu(this.hands[playerIndex], this.wangTile, this.diTile, false);
-    if (huCheck.canHu) {
-      this.sendTo(playerIndex, { type: 'can_zimo', result: huCheck });
-    }
+    this.notifySelfHu(playerIndex);
+  }
+
+  canPendingPlayerDo(pa, playerIndex, actionType) {
+    if (!pa || !pa.actions) return false;
+    if (actionType === 'hu') return pa.actions.hu.includes(playerIndex);
+    if (actionType === 'gang') return pa.actions.gang.includes(playerIndex);
+    if (actionType === 'peng') return pa.actions.peng.includes(playerIndex);
+    if (actionType === 'chi') return pa.actions.chi === playerIndex;
+    return false;
   }
 
   handleAction(playerIndex, actionType, combo = null) {
     try {
       console.log(`[服务器] handleAction: p${playerIndex} ${actionType} combo=${combo} pending=${!!this.pendingActions}`);
-      // 自摸胡牌不受 pendingActions 限制（玩家摸牌后可直接胡）
-      if (!this.pendingActions && actionType !== 'hu') {
-        this.sendTo(playerIndex, { type: 'error', message: '操作超时，已进入下一回合' });
-        return;
-      }
       const pa = this.pendingActions;
-      if (pa && (!pa.actions || !pa.actions[actionType])) {
-        if (actionType !== 'hu') { this.sendTo(playerIndex, { type: 'error', message: '无效操作' }); return; }
-      }
 
-      pa.actionResponded++;
-      pa.actionResults.push({ player: playerIndex, action: actionType, combo });
-
-      if (actionType === 'hu') {
-        // 记录胡的那张牌：抓炮=lastDiscard.tile，自摸=手牌最后一张
-        this.winTile = (this.pendingActions && this.lastDiscard)
-          ? this.lastDiscard.tile
-          : this.hands[playerIndex][this.hands[playerIndex].length - 1];
+      // 自摸胡牌：没有 pendingActions 时，只允许当前玩家在真实可胡时胡。
+      if (!pa) {
+        if (actionType !== 'hu' || playerIndex !== this.currentPlayerIndex) {
+          this.sendTo(playerIndex, { type: 'error', message: '操作超时，已进入下一回合' });
+          return;
+        }
+        const huCheck = HuCalculator.checkHu(this.hands[playerIndex], this.wangTile, this.diTile, false);
+        if (!huCheck.canHu) {
+          this.sendTo(playerIndex, { type: 'error', message: '当前牌型不能胡' });
+          this.notifySelfHu(playerIndex);
+          return;
+        }
+        this.winTile = this.hands[playerIndex][this.hands[playerIndex].length - 1];
         this.endRound(playerIndex);
         return;
       }
+
+      if (!this.canPendingPlayerDo(pa, playerIndex, actionType)) {
+        this.sendTo(playerIndex, { type: 'error', message: '无效操作' });
+        return;
+      }
+      if (pa.responded.has(playerIndex)) return;
+      pa.responded.add(playerIndex);
+      pa.actionResponded++;
+
+      if (actionType === 'hu') {
+        // 抓炮胡：只允许 pendingActions 中被判定可胡的玩家胡。
+        if (pa.timeoutId) clearTimeout(pa.timeoutId);
+        this.pendingActions = null;
+        this.winTile = this.lastDiscard?.tile ?? null;
+        this.endRound(playerIndex);
+        return;
+      }
+
+      pa.actionResults.push({ player: playerIndex, action: actionType, combo });
 
       // 等所有人回应后再结算
       if (pa.actionResponded >= pa.responderCount) {
@@ -255,6 +284,9 @@ export class GameRoom {
   handlePass(playerIndex) {
     if (!this.pendingActions) return;
     const pa = this.pendingActions;
+    if (!pa.relevantPlayers.has(playerIndex)) return;
+    if (pa.responded.has(playerIndex)) return;
+    pa.responded.add(playerIndex);
     pa.actionResponded++;
     if (pa.actionResponded >= pa.responderCount) {
       this.resolveActions();
@@ -275,7 +307,7 @@ export class GameRoom {
       if (RuleChecker.canMingGang(hand, targetTile, this.wangTile)) actions.gang.push(p);
       if (RuleChecker.canPeng(hand, targetTile)) actions.peng.push(p);
       if (i === 1) {
-        const combos = RuleChecker.canChi(hand, targetTile);
+        const combos = RuleChecker.canChi(hand, targetTile, this.wangTile);
         if (combos) { actions.chi = p; chiCombos = combos; }
       }
     }
@@ -309,7 +341,7 @@ export class GameRoom {
         }
       }
     }, 15000);
-    const pendingRef = { actions, actionResponded: 0, actionResults: [], responderCount, timeoutId };
+    const pendingRef = { actions, actionResponded: 0, actionResults: [], responderCount, timeoutId, responded: new Set(), relevantPlayers };
     this.pendingActions = pendingRef;
 
     relevantPlayers.forEach(p => {
@@ -401,6 +433,10 @@ export class GameRoom {
     const hand = this.hands[playerIndex];
     console.log(`[服务器] executeChi: p${playerIndex} tile=${tile} combo=[${combo}] hand=[${hand}]`);
     if (!combo || combo.length !== 2) { console.log('[服务器] chi combo无效'); return; }
+    const allowedCombos = RuleChecker.canChi(hand, tile, this.wangTile) || [];
+    const comboKey = [...combo].sort((a, b) => a - b).join(',');
+    const isAllowed = allowedCombos.some(c => [...c].sort((a, b) => a - b).join(',') === comboKey);
+    if (!isAllowed) { console.log('[服务器] chi combo不在合法吃法中'); return; }
     for (const t of combo) {
       const idx = hand.indexOf(t);
       if (idx === -1) { console.log(`[服务器] chi失败: 手牌中无${t}`); return; }
@@ -430,6 +466,7 @@ export class GameRoom {
     this.hands[cp].push(tile); // 不排序，新牌留在最右侧
     this.sendTo(cp, { type: 'drew_tile', tile });
     this.broadcastPublic();
+    this.notifySelfHu(cp);
   }
 
   endRound(winnerIndex) {
