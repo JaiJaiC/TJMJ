@@ -198,10 +198,10 @@
         </div>
 
         <div class="player-bottom" v-if="gameState.gamePhase === 'PLAYING' || gameState.gamePhase === 'SETTLEMENT'">
-          <div class="avatar-box" :class="{ 'active-glow': gameState.currentPlayerIndex === seat(0) }">
-            <img :src="getImg(`avatars/${gameState.players[seat(0)].avatar}.png`)" class="avatar-img clickable" @click.stop="openEmojiPicker(seat(0))" />
-            <span class="name">{{ gameMode === 'spectate' ? gameState.players[spectateView].name : gameState.players[seat(0)].name }}<span v-if="gameMode === 'spectate'" style="font-size:9px;color:#ffd700;"> (观战)</span></span>
-            <span class="score clickable" :class="gameState.players[seat(0)].score >= 0 ? 'score-up' : 'score-down'" @click.stop="openNumpad(seat(0))">{{ gameState.players[seat(0)].score >= 0 ? '+' : '' }}{{ gameState.players[seat(0)].score }}</span>
+          <div class="avatar-box" :class="{ 'active-glow': gameState.currentPlayerIndex === bottomViewIndex() }">
+            <img :src="getImg(`avatars/${gameState.players[bottomViewIndex()].avatar}.png`)" class="avatar-img clickable" @click.stop="openEmojiPicker(bottomViewIndex())" />
+            <span class="name">{{ gameState.players[bottomViewIndex()].name }}<span v-if="gameMode === 'spectate'" style="font-size:9px;color:#ffd700;"> (观战)</span></span>
+            <span class="score clickable" :class="gameState.players[bottomViewIndex()].score >= 0 ? 'score-up' : 'score-down'" @click.stop="openNumpad(bottomViewIndex())">{{ gameState.players[bottomViewIndex()].score >= 0 ? '+' : '' }}{{ gameState.players[bottomViewIndex()].score }}</span>
           </div>
           
           <div class="hand-tiles-bottom">
@@ -272,11 +272,11 @@
         <!-- 本局结果（胡牌后直接显示，赢家高亮 + 完整14张牌） -->
         <div class="showdown-overlay" v-if="gameState.showdownHands && (gameState.gamePhase === 'WAITING' || gameState.gamePhase === 'SETTLEMENT')">
           <div class="showdown-panel">
-            <h3>🏆 本局结果 — {{ gameState.players[lastWinnerIdx]?.name || '' }} 胡牌！</h3>
+            <h3>{{ lastWinnerIdx >= 0 ? `🏆 本局结果 — ${gameState.players[lastWinnerIdx]?.name || ''} 胡牌！` : '本局结果 — 流局' }}</h3>
             <div class="showdown-row" v-for="(p, idx) in gameState.players" :key="idx" :class="{ 'winner-row': idx === lastWinnerIdx }">
               <span class="showdown-name" :class="{ 'winner-name': idx === lastWinnerIdx }">{{ p.name }}</span>
               <span class="showdown-tiles">
-                <span v-for="t in (idx === lastWinnerIdx ? getWinnerFullHandForShowdown(idx) : gameState.showdownHands[idx])" :key="t" class="showdown-tile-wrapper">
+                <span v-for="(t, tileIndex) in (idx === lastWinnerIdx ? getWinnerFullHandForShowdown(idx) : gameState.showdownHands[idx])" :key="`show-${idx}-${tileIndex}-${t}`" class="showdown-tile-wrapper">
                   <img :src="getImg('3d/lay_1.png')" class="showdown-tile-bg" />
                   <img :src="getImg(`tiles/${t}.png`)" class="showdown-tile-face" />
                 </span>
@@ -306,17 +306,19 @@
               :style="{ '--tx': fly.tx + 'px', '--ty': fly.ty + 'px' }">{{ fly.icon }}</span>
 
         <div class="action-buttons" v-show="gameState.gamePhase === 'PLAYING'">
-          <!-- 吃牌多选：显示所有可选吃法 -->
-          <template v-if="actionState.canChi && actionState.chiCombinations.length > 1">
-            <div v-for="(combo, idx) in actionState.chiCombinations" :key="'chi'+idx"
-                 class="action-btn chi active" @click="handleChiWithCombo(combo)">
-              吃{{ getChiLabel(combo) }}
-            </div>
+          <!-- 只显示当前真正可执行的吃/碰/杠/胡，避免无效按钮常亮或误导 -->
+          <template v-if="actionState.canChi">
+            <template v-if="actionState.chiCombinations.length > 1">
+              <div v-for="(combo, idx) in actionState.chiCombinations" :key="'chi'+idx"
+                   class="action-btn chi active" @click="handleChiWithCombo(combo)">
+                吃{{ getChiLabel(combo) }}
+              </div>
+            </template>
+            <button v-else class="action-btn chi active" @click="handleChi">吃</button>
           </template>
-          <button v-else class="action-btn chi" :class="{ 'active': actionState.canChi }" @click="handleChi">吃</button>
-          <button class="action-btn peng" :class="{ 'active': actionState.canPeng }" @click="handlePeng">碰</button>
-          <button class="action-btn gang" :class="{ 'active': actionState.canGang }" @click="handleGang">杠</button>
-          <button class="action-btn hu" :class="{ 'active': actionState.canHu || (gameState.currentPlayerIndex === 0 && gameState.handTiles.length % 3 === 2) }" @click="handleHu">胡</button>
+          <button v-if="actionState.canPeng" class="action-btn peng active" @click="handlePeng">碰</button>
+          <button v-if="actionState.canGang" class="action-btn gang active" @click="handleGang">杠</button>
+          <button v-if="actionState.canHu || actionState.canSelfHu" class="action-btn hu active" @click="handleHu">胡</button>
           <button class="action-btn tuo" :class="{ 'active': tuoguan }" @click="toggleTuoguan" title="托管自动出牌">托</button>
           <button class="action-btn pass active" v-if="actionState.isWaiting" @click="passAction">过</button>
         </div>
@@ -375,12 +377,14 @@
 <script setup>
 import { reactive, ref, onMounted, watch } from 'vue';
 import { initTiles, determineDealPosition } from './utils/mjLogic.js';
+import { mergeHandTilesPreservingOrder, needsDiscardedWinningTile } from './utils/handState.js';
 import { calculateWang } from './core/constants.js';
 import { HuCalculator } from './core/HuCalculator.js';
 import { RuleChecker } from './core/RuleChecker.js';
+import { buildInterceptPlan, findNextAction } from './core/intercepts.js';
 import { NpcStrategy } from './ai/NpcStrategy.js';
 import { speak, playDong, playWin, speakTile } from './utils/speech.js';
-import { connect, send, on, off, netState, disconnect, netLatency } from './network/client.js';
+import { connect, send, on, off, netState, disconnect, netLatency, getReconnectToken } from './network/client.js';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 
 // 【核心解法】动态读取环境路径，彻底消灭 404！
@@ -448,7 +452,7 @@ let _micCtx = null; // 仅麦克风使用
 const playSong = (filename) => {
   const audio = bgMusic.value;
   if (!audio) return;
-  audio.src = `/TJMJ/${encodeURI(filename)}`;
+  audio.src = `${BASE}${encodeURI(filename)}`;
   audio.volume = 0.65;
   audio.load();
   audio.play().then(() => {
@@ -579,17 +583,36 @@ watch(() => gameState.handTiles.length, (newLen) => {
     handTileIds.push(++_tileIdCounter);
   }
 });
-// DEBUG：检测手牌被意外覆盖
-watch(() => [...gameState.handTiles], (after, before) => {
-  if (before && before.length > 0 && JSON.stringify(before) !== JSON.stringify(after)) {
-    console.trace('[DEBUG] handTiles 变化:', before.join(','), '→', after.join(','));
-  }
-});
 // 自动弹幕：对局中开启，离开对局关闭
 watch(() => gameState.gamePhase, (phase) => {
   if (phase === 'PLAYING') startAutoDanmaku();
   else stopAutoDanmaku();
 });
+const actionState = reactive({
+  isWaiting: false, targetTile: null, sourceIndex: -1,
+  canChi: false, chiCombinations: [], canPeng: false, canGang: false, canHu: false, canSelfHu: false
+});
+
+const clearActionPrompt = () => {
+  actionState.isWaiting = false;
+  actionState.targetTile = null;
+  actionState.sourceIndex = -1;
+  actionState.canChi = false;
+  actionState.chiCombinations = [];
+  actionState.canPeng = false;
+  actionState.canGang = false;
+  actionState.canHu = false;
+};
+
+const updateSelfActionHints = () => {
+  if (actionState.isWaiting || gameState.gamePhase !== 'PLAYING' || !isMyTurn()) {
+    actionState.canSelfHu = false;
+    return;
+  }
+  actionState.canSelfHu = HuCalculator.checkHu(gameState.handTiles, gameState.wangTile, gameState.diTile, false).canHu;
+  actionState.canGang = RuleChecker.canAnGang(gameState.handTiles, gameState.wangTile).length > 0;
+};
+
 // 托管模式：轮到自己时自动出牌
 watch(() => gameState.currentPlayerIndex, () => {
   if (tuoguan.value && isMyTurn()) {
@@ -744,11 +767,6 @@ const sendEmoji = (icon) => {
   }, 800);
 };
 
-const actionState = reactive({
-  isWaiting: false, targetTile: null, sourceIndex: -1,
-  canChi: false, chiCombinations: [], canPeng: false, canGang: false, canHu: false
-});
-
 // 托管模式：自动出牌
 const tuoguan = ref(false);
 const toggleTuoguan = () => {
@@ -758,13 +776,21 @@ const toggleTuoguan = () => {
   }
 };
 const tuoguanPlay = () => {
-  if (!tuoguan.value || !isMyTurn() || actionState.isWaiting) return;
-  // 能胡就胡
-  if (actionState.canHu) { handleHu(); return; }
-  if (actionState.canGang) { handleGang(); return; }
-  if (actionState.canPeng) { handlePeng(); return; }
-  if (actionState.canChi) { handleChi(); return; }
-  if (actionState.isWaiting) { passAction(); return; }
+  if (!tuoguan.value || !isMyTurn()) return;
+  // 有人打出牌，等待我们响应吃碰杠胡
+  if (actionState.isWaiting) {
+    if (actionState.canHu) { handleHu(); return; }
+    if (actionState.canGang) { handleGang(); return; }
+    if (actionState.canPeng) { handlePeng(); return; }
+    if (actionState.canChi) { handleChi(); return; }
+    passAction();
+    return;
+  }
+  // 轮到出牌：能自摸先胡
+  if (actionState.canSelfHu || HuCalculator.checkHu(gameState.handTiles, gameState.wangTile, gameState.diTile, false).canHu) {
+    handleHu();
+    return;
+  }
   // 自动出牌：用AI策略选择
   const canDiscard = gameState.handTiles.length % 3 === 2 || gameState.handTiles.length % 3 === 0;
   if (canDiscard) {
@@ -808,7 +834,7 @@ const getWinnerFullHandForShowdown = (pIdx) => {
   if (!gameState.showdownHands) return [];
   const hand = [...(gameState.showdownHands[pIdx] || [])];
   // 抓炮时胡的那张牌不在手牌中，需要额外加入
-  if (lastWinTile.value != null && !hand.includes(lastWinTile.value)) {
+  if (needsDiscardedWinningTile(hand, lastWinTile.value)) {
     hand.push(lastWinTile.value);
   }
   const exposed = getFlatExposed(pIdx);
@@ -964,10 +990,12 @@ const myPlayerIndexForChat = ref(-1);
 // === 自动随机弹幕（每30秒） ===
 const autoDanmakuPhrases = ['一个个不急死哒', '你看咯你看咯', '快点咯'];
 let autoDanmakuTimer = null;
+let autoDanmakuStartTimer = null;
 const startAutoDanmaku = () => {
   stopAutoDanmaku();
   // 首条5秒后弹出，之后每30秒
-  setTimeout(() => {
+  autoDanmakuStartTimer = setTimeout(() => {
+    autoDanmakuStartTimer = null;
     if (gameState.gamePhase !== 'PLAYING') return;
     const phrase = autoDanmakuPhrases[Math.floor(Math.random() * autoDanmakuPhrases.length)];
     addChatMessage({ id: ++chatMsgId, from: -1, fromName: '系统', text: phrase });
@@ -979,6 +1007,7 @@ const startAutoDanmaku = () => {
   }, 30000);
 };
 const stopAutoDanmaku = () => {
+  if (autoDanmakuStartTimer) { clearTimeout(autoDanmakuStartTimer); autoDanmakuStartTimer = null; }
   if (autoDanmakuTimer) { clearInterval(autoDanmakuTimer); autoDanmakuTimer = null; }
 };
 
@@ -1152,9 +1181,10 @@ const closeAllPeerConnections = async () => {
 };
 
 const spectateRoomInput = ref('');
+const readyNextCount = ref(0);
 
 const openTestMode = () => {
-  window.open('/TJMJ/test.html?v=3', '_blank');
+  window.open(`${BASE}test.html?v=3`, '_blank', 'noopener');
 };
 
 // 自动加入逻辑（URL参数）
@@ -1210,6 +1240,7 @@ const switchSpectateView = (viewIdx) => {
   if (gameMode.value !== 'spectate') return;
   spectateView.value = viewIdx;
   gameState.handTiles = [...(gameState.npcHands[viewIdx] || [])];
+  gameState.selectedTileIndex = -1;
 };
 
 // === 联机模式 ===
@@ -1242,7 +1273,7 @@ const joinRoom = async () => {
   try {
     await connect();
     setupNetworkListeners();
-    send({ type: 'join_room', roomId: multiState.joinInput, name: multiState.playerName, avatar: gameState.players[0].avatar });
+    send({ type: 'join_room', roomId: multiState.joinInput, name: multiState.playerName, avatar: gameState.players[0].avatar, reconnectToken: getReconnectToken() });
   } catch (e) {
     multiState.error = '连接服务器失败';
   }
@@ -1327,8 +1358,14 @@ const setupNetworkListeners = () => {
 
   on('game_start', (msg) => {
     gameState.gamePhase = 'PLAYING';
+    clearActionPrompt();
+    actionState.canSelfHu = false;
     gameState.discards = [];
     gameState.exposed = [[], [], [], []];
+    gameState.showdownHands = null;
+    gameState.pendingDiHuChoice = null;
+    gameState.zhaNiaoResult = null;
+    gameState.npcFirstTurnTing = [false, false, false, false];
     gameState.handTiles = msg.hand;
     gameState.wangTile = msg.wangTile;
     gameState.diTile = msg.diTile;
@@ -1344,6 +1381,45 @@ const setupNetworkListeners = () => {
       gameState.players[i].name = p.name || gameState.players[i].name;
       gameState.players[i].avatar = p.avatar || gameState.players[i].avatar;
     });
+    updateSelfActionHints();
+  });
+
+  // 断线重连：恢复对局/结算状态
+  on('resume_state', (msg) => {
+    gameState.gamePhase = msg.state === 'PLAYING' ? 'PLAYING' : 'SETTLEMENT';
+    clearActionPrompt();
+    actionState.canSelfHu = false;
+    gameState.handTiles = msg.hand || [];
+    gameState.wangTile = msg.wangTile;
+    gameState.diTile = msg.diTile;
+    gameState.diIndex = msg.diIndex;
+    gameState.dice = msg.dice;
+    gameState.currentPlayerIndex = msg.currentPlayer;
+    gameState.roundNumber = msg.roundNumber;
+    gameState.dealerIndex = msg.dealerIndex ?? gameState.dealerIndex;
+    gameState.deckRemaining = msg.deckRemaining;
+    gameState.wallTiles = msg.wallTiles || [];
+    gameState.discards = msg.discards || [];
+    gameState.exposed = msg.exposed || [[], [], [], []];
+    gameState.npcTileCounts = msg.tileCounts || [13, 13, 13, 13];
+    gameState.npcHands = [[], [], [], []];
+    if (msg.players) msg.players.forEach((p, i) => {
+      gameState.players[i].name = p.name || gameState.players[i].name;
+      gameState.players[i].avatar = p.avatar || gameState.players[i].avatar;
+      gameState.players[i].score = p.score != null ? p.score : gameState.players[i].score;
+    });
+    if (msg.totalScores) gameState.players.forEach((p, i) => { p.score = msg.totalScores[i] || 0; });
+    if (msg.roundResult) {
+      gameState.showdownHands = msg.roundResult.hands;
+      lastWinTile.value = msg.roundResult.winTile || null;
+      readyNextCount.value = 0;
+      lastWinnerIdx.value = msg.roundResult.winnerIndex;
+      gameState.roundNumber = msg.roundResult.roundNumber;
+    } else {
+      gameState.showdownHands = null;
+      lastWinnerIdx.value = -1;
+    }
+    if (msg.yourTurn) updateSelfActionHints();
   });
 
   on('game_state', (msg) => {
@@ -1365,33 +1441,29 @@ const setupNetworkListeners = () => {
     } else if (gameMode.value === 'multi') {
       // 智能合并：保留客户端拖拽顺序，仅增删
       if (msg.hand && msg.hand.length > 0) {
-        const oldTiles = [...gameState.handTiles];
-        const srv = [...msg.hand];
-        // 计数差集（处理重复牌）
-        const count = (arr) => { const m = {}; arr.forEach(v => m[v] = (m[v]||0)+1); return m; };
-        const oldCount = count(oldTiles), srvCount = count(srv);
-        const added = srv.filter(v => (srvCount[v]||0) > (oldCount[v]||0));
-        const removed = oldTiles.filter(v => (oldCount[v]||0) > (srvCount[v]||0));
-        // 移除旧牌（每次只删一个实例）
-        let merged = [...oldTiles];
-        removed.forEach(v => { const i = merged.indexOf(v); if (i >= 0) merged.splice(i, 1); });
-        added.forEach(v => merged.push(v)); // 新牌放最右
-        if (removed.length > 0 || added.length > 0) {
+        const merged = mergeHandTilesPreservingOrder(gameState.handTiles, msg.hand);
+        if (merged.some((tile, index) => tile !== gameState.handTiles[index]) || merged.length !== gameState.handTiles.length) {
           gameState.handTiles = merged;
         }
       } else {
         gameState.handTiles = msg.hand || [];
       }
+      updateSelfActionHints();
     }
   });
 
   on('your_turn', (msg) => {
     gameState.currentPlayerIndex = msg.playerIndex ?? 0;
+    updateSelfActionHints();
   });
 
   on('drew_tile', (msg) => {
     gameState.handTiles.push(msg.tile); // 放最右边，不排序
-    actionState.canGang = false;
+    updateSelfActionHints();
+  });
+
+  on('can_zimo', (msg) => {
+    actionState.canSelfHu = !!msg.canHu;
   });
 
   on('action_prompt', (msg) => {
@@ -1402,15 +1474,15 @@ const setupNetworkListeners = () => {
     actionState.canPeng = msg.canPeng;
     actionState.canChi = msg.canChi;
     actionState.chiCombinations = msg.chiCombinations || [];
+    actionState.canSelfHu = false;
     actionState.isWaiting = true;
   });
 
   on('waiting_action', (msg) => {
-    actionState.isWaiting = false;
+    clearActionPrompt(); // 他人已响应，清掉自己这边可能残留的提示按钮
   });
 
   // 多人确认进度
-  const readyNextCount = ref(0);
   on('round_end', (msg) => {
     gameState.gamePhase = 'SETTLEMENT';
     gameState.showdownHands = msg.hands;
@@ -1419,7 +1491,20 @@ const setupNetworkListeners = () => {
     if (msg.scores) msg.scores.forEach((s, i) => { gameState.players[i].score = s; });
     if (msg.totalScores) gameState.players.forEach((p, i) => { p.score = msg.totalScores[i] || 0; });
     gameState.roundNumber = msg.roundNumber;
-    lastWinnerIdx.value = msg.winnerIndex >= 0 ? msg.winnerIndex : lastWinnerIdx.value;
+    lastWinnerIdx.value = msg.winnerIndex;
+  });
+  on('game_end', (msg) => {
+    const summary = (msg.players && msg.players.length ? msg.players : gameState.players)
+      .map(p => `${p.name}: ${p.score} 分`).join('\n');
+    alert(`🏆 16局结束！最终排名：\n${summary}`);
+    gameState.showdownHands = null;
+    gameState.gamePhase = 'WAITING';
+    gameState.players.forEach(p => p.score = 0);
+    gameState.roundNumber = 1;
+    gameState.readyStatus = [false, false, false, false];
+    gameState.dealerIndex = 0;
+    leaveRoom();
+    backToMenu();
   });
   on('player_ready_next', (msg) => {
     readyNextCount.value = msg.ready.filter(r => r).length;
@@ -1496,6 +1581,8 @@ const nextRoundOrFinish = () => {
     gameState.readyStatus = [false, false, false, false];
     gameState.dealerIndex = 0;
     gameState.gamePhase = 'WAITING';
+    gameState.showdownHands = null;
+    backToMenu();
     return;
   }
   // 分数自然累积不重置，结算界面的支付金额=当局限分
@@ -1513,17 +1600,18 @@ const startNextRoundFromShowdown = () => {
     return; // 等服务器通知新局开始
   }
   if (gameState.roundNumber >= 16) {
+    gameState.showdownHands = null;
     nextRoundOrFinish();
     return;
   }
+  nextRoundOrFinish();
   gameState.showdownHands = null;
   handleReady();
 };
 
 const startRound = () => {
-  actionState.isWaiting = false;
-  actionState.targetTile = null;
-  actionState.canChi = actionState.canPeng = actionState.canGang = actionState.canHu = false;
+  clearActionPrompt();
+  actionState.canSelfHu = false;
 
   gameState.gamePhase = 'PLAYING';
   gameState.readyStatus = [false, false, false, false];
@@ -1584,9 +1672,8 @@ const startRound = () => {
   const dealerHand = dealer === 0 ? gameState.handTiles : gameState.npcHands[dealer];
   const dealerCheck = HuCalculator.checkFirstTurn(dealerHand, gameState.wangTile, true);
   if (dealerCheck.canFirstTurnHu) {
-    gameState.players[dealer].score += dealerCheck.score;
-    gameState.gamePhase = 'WAITING';
     alert(`【起手胡！】${gameState.players[dealer].name} 庄家14张直接胡牌！(${dealerCheck.type}) 得 ${dealerCheck.score} 分！`);
+    finalizeHu(dealer, dealerCheck, true, -1, dealerHand[dealerHand.length - 1]);
     return;
   }
   // 闲家(NPC)13张：检查起手报听
@@ -1597,6 +1684,7 @@ const startRound = () => {
       console.log(`【起手报听】${gameState.players[p].name} 起手听牌！`);
     }
   }
+  updateSelfActionHints();
 };
 
 const physicalDraw = () => {
@@ -1620,6 +1708,9 @@ const drawTile = (playerIndex) => {
       [...gameState.npcHands[2]],
       [...gameState.npcHands[3]],
     ];
+    lastWinnerIdx.value = -1;
+    lastWinTile.value = null;
+    settlement.winnerIndex = -1;
     gameState.gamePhase = 'WAITING';
     alert("🀄 牌山只剩4张，流局！本局无人胡牌。");
     return;
@@ -1627,7 +1718,7 @@ const drawTile = (playerIndex) => {
   const newTile = physicalDraw();
   if (playerIndex === 0) {
     gameState.handTiles.push(newTile);
-    actionState.canGang = RuleChecker.canAnGang(gameState.handTiles, gameState.wangTile).length > 0;
+    updateSelfActionHints();
   } else {
     gameState.npcHands[playerIndex].push(newTile);
     gameState.npcTileCounts[playerIndex] = gameState.npcHands[playerIndex].length;
@@ -1637,11 +1728,13 @@ const drawTile = (playerIndex) => {
 };
 
 const isMyTurn = () => {
+  if (gameMode.value === 'spectate') return false; // 观战者不能参与出牌
   if (gameMode.value === 'multi') return gameState.currentPlayerIndex === netState.playerIndex;
   return gameState.currentPlayerIndex === 0;
 };
 
 const getMyExposed = () => {
+  if (gameMode.value === 'spectate') return gameState.exposed[spectateView.value] || [];
   const idx = gameMode.value === 'multi' ? netState.playerIndex : 0;
   return gameState.exposed[idx] || [];
 };
@@ -1649,6 +1742,8 @@ const getMyExposed = () => {
 // 根据当前玩家座位，把绝对座位映射到显示方位
 const mySeat = () => gameMode.value === 'multi' ? netState.playerIndex : 0;
 const seat = (dir) => (mySeat() + dir) % 4; // dir: 0=自己 1=下家 2=对家 3=上家
+// 底部视角：单机/联机看自己，观战看当前观战对象
+const bottomViewIndex = () => gameMode.value === 'spectate' ? spectateView.value : mySeat();
 
 const onTapTile = (index) => {
   if (gameState.selectedTileIndex === index) {
@@ -1671,17 +1766,18 @@ const onDragStart = (index, e) => {
 
 const onDragOver = (index) => {
   if (dragIndex.value === -1 || dragIndex.value === index) return;
+  const fromIndex = dragIndex.value;
   dragOverIndex.value = index;
   const tiles = gameState.handTiles;
-  const dragged = tiles[dragIndex.value];
-  tiles.splice(dragIndex.value, 1);
+  const dragged = tiles[fromIndex];
+  tiles.splice(fromIndex, 1);
   tiles.splice(index, 0, dragged);
   // 同步稳定 ID 数组
-  const draggedId = handTileIds[dragIndex.value];
-  handTileIds.splice(dragIndex.value, 1);
+  const draggedId = handTileIds[fromIndex];
+  handTileIds.splice(fromIndex, 1);
   handTileIds.splice(index, 0, draggedId);
   dragIndex.value = index;
-  if (gameState.selectedTileIndex === dragIndex.value) gameState.selectedTileIndex = index;
+  if (gameState.selectedTileIndex === fromIndex) gameState.selectedTileIndex = index;
 };
 
 const onDragLeave = (index) => {
@@ -1726,15 +1822,16 @@ const onTouchMove = (e) => {
     }
   });
   if (target !== dragIndex.value && target >= 0 && target < gameState.handTiles.length) {
+    const fromIndex = dragIndex.value;
     const tilesArr = gameState.handTiles;
-    const dragged = tilesArr[dragIndex.value];
-    tilesArr.splice(dragIndex.value, 1);
+    const dragged = tilesArr[fromIndex];
+    tilesArr.splice(fromIndex, 1);
     tilesArr.splice(target, 0, dragged);
-    const draggedId = handTileIds[dragIndex.value];
-    handTileIds.splice(dragIndex.value, 1);
+    const draggedId = handTileIds[fromIndex];
+    handTileIds.splice(fromIndex, 1);
     handTileIds.splice(target, 0, draggedId);
     dragIndex.value = target;
-    if (gameState.selectedTileIndex === dragIndex.value) gameState.selectedTileIndex = target;
+    if (gameState.selectedTileIndex === fromIndex) gameState.selectedTileIndex = target;
   }
 };
 const onTouchEnd = (index, e) => {
@@ -1747,12 +1844,28 @@ const onTouchEnd = (index, e) => {
   dragOverIndex.value = -1;
 };
 
+const removeHandTileAt = (index) => {
+  if (!Number.isInteger(index) || index < 0 || index >= gameState.handTiles.length) return null;
+  handTileIds.splice(index, 1);
+  return gameState.handTiles.splice(index, 1)[0];
+};
+
+const removeHandTileValue = (tile) => {
+  const index = gameState.handTiles.indexOf(tile);
+  if (index < 0) return false;
+  removeHandTileAt(index);
+  return true;
+};
+
 const playTile = (index) => {
-  const val = gameState.handTiles[index];
-  gameState.handTiles.splice(index, 1);
-  handTileIds.splice(index, 1); // 同步稳定ID
+  const canDiscard = gameState.handTiles.length % 3 === 2 || gameState.handTiles.length % 3 === 0;
+  if (!Number.isInteger(index) || index < 0 || index >= gameState.handTiles.length ||
+      !isMyTurn() || !canDiscard || actionState.isWaiting || gameState.gamePhase !== 'PLAYING') return;
+  const val = removeHandTileAt(index);
   // 不排序，保留玩家手动拖拽的顺序
   gameState.selectedTileIndex = -1;
+  actionState.canSelfHu = false;
+  actionState.canGang = false;
   clearTimeout(turnTimer);
   playDong();
   speakTile(val); // 播报牌名
@@ -1766,21 +1879,22 @@ const playTile = (index) => {
 };
 
 const npcPlayPhase = (playerIndex) => {
+  if (gameState.gamePhase !== 'PLAYING' || gameState.currentPlayerIndex !== playerIndex) return;
   let hand = gameState.npcHands[playerIndex];
   // 使用AI策略选择要打出的牌
   const strategy = new NpcStrategy(hand, gameState.wangTile, gameState.exposed[playerIndex], gameState.discards, gameState.deckRemaining);
-  const tileToPlay = strategy.chooseDiscard();
-  if (tileToPlay === null) {
+  let tileToPlay = strategy.chooseDiscard();
+  if (tileToPlay == null || !hand.includes(tileToPlay)) {
     // fallback: random
-    hand.splice(Math.floor(Math.random() * hand.length), 1)[0];
-    gameState.discards.push({ value: tileToPlay || hand[0] });
+    if (hand.length === 0) return;
+    tileToPlay = hand.splice(Math.floor(Math.random() * hand.length), 1)[0];
   } else {
     hand.splice(hand.indexOf(tileToPlay), 1);
-    gameState.discards.push({ value: tileToPlay });
   }
+  gameState.discards.push({ value: tileToPlay });
   gameState.npcTileCounts[playerIndex] = hand.length;
   playDong();
-  if (tileToPlay) speakTile(tileToPlay);
+  speakTile(tileToPlay);
   // 观战模式：同步视角
   if (gameMode.value === 'spectate') {
     gameState.handTiles = [...(gameState.npcHands[spectateView.value] || [])];
@@ -1788,56 +1902,59 @@ const npcPlayPhase = (playerIndex) => {
   handleTileDiscarded(playerIndex, tileToPlay);
 };
 
+// 单机模式吃碰杠胡裁决队列：
+// 按“胡 > 杠 > 碰 > 吃”全局优先级，同优先级内按离出牌人的距离（下家优先）逐个裁决；
+// 玩家过牌或 NPC 决策放弃后，继续交给下一位，直到无人可动才轮到下一家摸牌。
+let singleInterceptQueue = null; // { plan, sourceIndex, targetTile, priority, cursor, cleared }
+
+const clearSingleInterceptQueue = () => {
+  if (singleInterceptQueue) singleInterceptQueue.cleared = true;
+  singleInterceptQueue = null;
+};
+
 const handleTileDiscarded = (sourceIndex, targetTile) => {
-  if (gameMode.value === 'multi') return; // 联机模式由服务器处理
-  let intercepts = { hu: [], gang: [], peng: [], chi: [] };
+  if (gameMode.value === 'multi') return; // 联机模式由服务器裁决
   actionState.chiCombinations = [];
+  const plan = buildInterceptPlan(
+    sourceIndex,
+    targetTile,
+    gameState.wangTile,
+    gameState.diTile,
+    (p) => (p === 0 ? gameState.handTiles : gameState.npcHands[p]),
+  );
+  singleInterceptQueue = { plan, sourceIndex, targetTile, priority: 0, cursor: 0, cleared: false };
+  resolveInterceptNext();
+};
 
-  for(let i=1; i<=3; i++) {
-    let p = (sourceIndex + i) % 4;
-    let hand = (p === 0) ? gameState.handTiles : gameState.npcHands[p];
+const resolveInterceptNext = () => {
+  if (gameMode.value !== 'single') return;
+  const q = singleInterceptQueue;
+  if (!q || q.cleared) { nextTurn(); return; }
 
-    const huCheck = HuCalculator.checkHu([...hand, targetTile], gameState.wangTile, gameState.diTile, false);
-	    // 有癞子不能抓炮，只有 canCatchCannon 的玩家才能拦截别人打出的牌
-	    if (huCheck.canHu && huCheck.canCatchCannon) intercepts.hu.push(p);
-    if (RuleChecker.canMingGang(hand, targetTile, gameState.wangTile)) intercepts.gang.push(p);
-    if (RuleChecker.canPeng(hand, targetTile)) intercepts.peng.push(p);
+  const next = findNextAction(q.plan, q.priority, q.cursor);
+  if (!next) {
+    singleInterceptQueue = null;
+    nextTurn();
+    return;
+  }
 
-    if (i === 1) { 
-       let combos = RuleChecker.canChi(hand, targetTile);
-       if (combos) {
-          intercepts.chi.push(p);
-          if (p === 0) actionState.chiCombinations = combos;
-       }
+  q.priority = next.priority;
+  q.cursor = next.cursor + 1;
+  const p = next.player;
+  const can = q.plan.byPlayer[p];
+
+  if (p === 0) {
+    // 轮到玩家：胡优先时只给胡；其他时候展示其所有可用操作
+    const actions = { ...can };
+    if (next.priority === 0) {
+      actions.canGang = actions.canPeng = actions.canChi = false;
     }
+    actionState.chiCombinations = can.chi ? [...can.chiCombinations] : [];
+    promptPlayerAction(q.sourceIndex, q.targetTile, actions);
+    return;
   }
 
-  // 先处理 NPC 拦截（hu > gang > peng > chi 优先级）
-  if (intercepts.hu.filter(i => i !== 0).length > 0) {
-    return executeNpcAction(intercepts.hu.find(i => i !== 0), 'hu', targetTile, sourceIndex);
-  }
-  if (intercepts.gang.filter(i => i !== 0).length > 0) {
-    return executeNpcAction(intercepts.gang.find(i => i !== 0), 'gang', targetTile, sourceIndex);
-  }
-  if (intercepts.peng.filter(i => i !== 0).length > 0) {
-    return executeNpcAction(intercepts.peng.find(i => i !== 0), 'peng', targetTile, sourceIndex);
-  }
-  if (intercepts.chi.filter(i => i !== 0).length > 0) {
-    return executeNpcAction(intercepts.chi.find(i => i !== 0), 'chi', targetTile, sourceIndex);
-  }
-
-  // 玩家：所有可选操作同时亮起
-  if (intercepts.hu.includes(0) || intercepts.gang.includes(0) || intercepts.peng.includes(0) || intercepts.chi.includes(0)) {
-    const actions = {
-      canHu: intercepts.hu.includes(0),
-      canGang: intercepts.gang.includes(0),
-      canPeng: intercepts.peng.includes(0),
-      canChi: intercepts.chi.includes(0),
-    };
-    return promptPlayerAction(sourceIndex, targetTile, actions);
-  }
-
-  nextTurn();
+  executeNpcAction(p, next.actionType, q.targetTile, q.sourceIndex);
 };
 
 const promptPlayerAction = (sourceIndex, targetTile, actions) => {
@@ -1847,6 +1964,7 @@ const promptPlayerAction = (sourceIndex, targetTile, actions) => {
   actionState.canGang = !!actions.canGang;
   actionState.canPeng = !!actions.canPeng;
   actionState.canChi = !!actions.canChi;
+  if (actions.chiCombinations) actionState.chiCombinations = [...actions.chiCombinations];
   actionState.isWaiting = true;
 };
 
@@ -1856,6 +1974,7 @@ const executeNpcAction = (npcIndex, actionType, targetTile, discarderIndex = -1)
     if (actionType === 'hu') {
        const scoreRes = HuCalculator.checkHu([...hand, targetTile], gameState.wangTile, gameState.diTile, false);
        speak('hu');
+       clearSingleInterceptQueue();
        finalizeHu(npcIndex, scoreRes, false, discarderIndex >= 0 ? discarderIndex : npcIndex, targetTile);
     } else if (actionType === 'gang') {
        // 【抢杠检测】NPC明杠前检查是否有人能胡
@@ -1865,6 +1984,7 @@ const executeNpcAction = (npcIndex, actionType, targetTile, discarderIndex = -1)
          const robberName = robber.player === 0 ? '你' : gameState.players[robber.player].name;
          gameState.players[npcIndex].score -= robber.score;
          gameState.players[robber.player].score += robber.score;
+         clearSingleInterceptQueue();
          gameState.gamePhase = 'WAITING';
          alert(`【抢杠！】${robberName} 抢杠胡了！(${robber.type}) 得 ${robber.score} 分！\n${gameState.players[npcIndex].name}(杠牌者)赔 ${robber.score} 分。`);
          return;
@@ -1875,12 +1995,13 @@ const executeNpcAction = (npcIndex, actionType, targetTile, discarderIndex = -1)
        gameState.npcTileCounts[npcIndex] = hand.length;
        gameState.currentPlayerIndex = npcIndex;
        speak('gang');
-       setTimeout(() => npcPlayPhase(npcIndex), 800);
+       clearSingleInterceptQueue();
+       setTimeout(() => drawTile(npcIndex), 800);
     } else if (actionType === 'peng') {
        // 使用AI策略决定是否碰
        const strategy = new NpcStrategy(hand, gameState.wangTile, gameState.exposed[npcIndex], gameState.discards, gameState.deckRemaining);
        if (!strategy.shouldPeng(targetTile)) {
-         nextTurn(); return; // AI选择不碰
+         resolveInterceptNext(); return; // AI选择不碰，继续裁决下一位
        }
        for(let i=0; i<2; i++) hand.splice(hand.indexOf(targetTile), 1);
        gameState.discards.pop();
@@ -1888,18 +2009,21 @@ const executeNpcAction = (npcIndex, actionType, targetTile, discarderIndex = -1)
        gameState.npcTileCounts[npcIndex] = hand.length;
        gameState.currentPlayerIndex = npcIndex;
        speak('peng');
+       clearSingleInterceptQueue();
        setTimeout(() => npcPlayPhase(npcIndex), 800);
     } else if (actionType === 'chi') {
-       let combos = RuleChecker.canChi(hand, targetTile);
+       let combos = RuleChecker.canChi(hand, targetTile, gameState.wangTile);
        // 使用AI策略选择最优吃法
        const strategy = new NpcStrategy(hand, gameState.wangTile, gameState.exposed[npcIndex], gameState.discards, gameState.deckRemaining);
        let combo = strategy.shouldChi(combos, targetTile) || combos[0];
+       if (!combo) { resolveInterceptNext(); return; } // 无可选吃法，继续裁决
        combo.forEach(t => hand.splice(hand.indexOf(t), 1));
        gameState.discards.pop();
        gameState.exposed[npcIndex].push({ type: 'chi', tiles: [combo[0], targetTile, combo[1]].sort((a,b)=>a-b) });
        gameState.npcTileCounts[npcIndex] = hand.length;
        gameState.currentPlayerIndex = npcIndex;
        speak('chi');
+       clearSingleInterceptQueue();
        setTimeout(() => npcPlayPhase(npcIndex), 800);
     }
   }, 600); 
@@ -1910,43 +2034,40 @@ const handlePeng = () => {
   const target = actionState.targetTile;
   if (gameMode.value === 'multi') {
     multiAction('peng');
-    actionState.isWaiting = false;
+    clearActionPrompt();
     return;
   }
   for(let i=0; i<2; i++) {
-    const idx = gameState.handTiles.indexOf(target);
-    gameState.handTiles.splice(idx, 1);
-    handTileIds.splice(idx, 1);
+    if (!removeHandTileValue(target)) return;
   }
   gameState.discards.pop();
   gameState.exposed[0].push({ type: 'peng', tiles: [target, target, target] });
-  actionState.isWaiting = false;
+  clearActionPrompt();
+  clearSingleInterceptQueue();
   gameState.currentPlayerIndex = 0;
   speak('peng');
 };
 
 const handleChi = () => {
   // 单一吃法时直接调用
-  if (!actionState.canChi) return;
+  if (!actionState.canChi || actionState.chiCombinations.length === 0) return;
   handleChiWithCombo(actionState.chiCombinations[0]);
 };
 
 const handleChiWithCombo = (combo) => {
   if (gameMode.value === 'multi') {
     multiAction('chi', combo);
-    actionState.isWaiting = false;
+    clearActionPrompt();
     return;
   }
   const target = actionState.targetTile;
   combo.forEach(t => {
-    const idx = gameState.handTiles.indexOf(t);
-    gameState.handTiles.splice(idx, 1);
-    handTileIds.splice(idx, 1);
+    removeHandTileValue(t);
   });
   gameState.discards.pop();
   gameState.exposed[0].push({ type: 'chi', tiles: [combo[0], target, combo[1]].sort((a,b)=>a-b) });
-  actionState.isWaiting = false;
-  actionState.canChi = false;
+  clearActionPrompt();
+  clearSingleInterceptQueue();
   gameState.currentPlayerIndex = 0;
   speak('chi');
 };
@@ -1968,7 +2089,7 @@ const handleGang = () => {
   if (!actionState.canGang) return;
   if (gameMode.value === 'multi') {
     multiAction('gang');
-    actionState.isWaiting = false;
+    clearActionPrompt();
     return;
   }
   let gangTile = null; let type = '';
@@ -1985,30 +2106,42 @@ const handleGang = () => {
       gameState.players[robber.player].score += robber.score;
       actionState.isWaiting = false;
       actionState.canGang = false;
+      clearSingleInterceptQueue();
       gameState.gamePhase = 'WAITING';
       alert(`【抢杠！】${robberName} 抢杠胡了！(${robber.type}) 得 ${robber.score} 分！\n你(杠牌者)赔 ${robber.score} 分。`);
       return;
     }
 
-    for(let i=0; i<3; i++) gameState.handTiles.splice(gameState.handTiles.indexOf(gangTile), 1);
+    for(let i=0; i<3; i++) {
+      if (!removeHandTileValue(gangTile)) return;
+    }
     gameState.discards.pop();
     gameState.exposed[0].push({ type, tiles: [gangTile, gangTile, gangTile, gangTile] });
   } else {
-    const gangTiles = RuleChecker.canAnGang(gameState.handTiles, gameState.wangTile); gangTile = gangTiles[0]; type = 'angang';
-    for(let i=0; i<4; i++) gameState.handTiles.splice(gameState.handTiles.indexOf(gangTile), 1);
+    const gangTiles = RuleChecker.canAnGang(gameState.handTiles, gameState.wangTile);
+    gangTile = gangTiles[0]; type = 'angang';
+    if (gangTile == null) { updateSelfActionHints(); return; }
+    for(let i=0; i<4; i++) {
+      if (!removeHandTileValue(gangTile)) return;
+    }
     gameState.exposed[0].push({ type, tiles: [gangTile, gangTile, gangTile, gangTile] });
   }
-  actionState.isWaiting = false;
+  clearActionPrompt();
+  clearSingleInterceptQueue();
   gameState.currentPlayerIndex = 0;
   speak(type === 'angang' ? 'angang' : 'minggang');
-  alert(`触发${type === 'angang' ? '暗杠' : '明杠'}！\n重新掷骰子摸牌。`);
+  alert(`触发${type === 'angang' ? '暗杠' : '明杠'}！\n补摸一张牌。`);
   drawTile(0);
 };
 
 const passAction = () => {
-  actionState.isWaiting = false;
-  actionState.canChi = actionState.canPeng = actionState.canGang = actionState.canHu = false;
+  clearActionPrompt();
+  actionState.canSelfHu = false;
   if (gameMode.value === 'multi') { multiPass(); return; }
+  if (singleInterceptQueue && !singleInterceptQueue.cleared) {
+    resolveInterceptNext();
+    return;
+  }
   nextTurn();
 };
 
@@ -2027,6 +2160,7 @@ const confirmPayment = (idx) => {
 };
 
 const openNumpad = (playerIndex) => {
+  if (gameMode.value === 'spectate') return; // 观战者不能计分
   if (playerIndex === mySeat()) return; // 不能给自己付
   settlement.numpadFor = playerIndex;
   settlement.numpadValue = '';
@@ -2133,16 +2267,19 @@ const finalizeHu = (playerIndex, huResult, isSelfDraw, sourceDiscarderIndex = -1
   lastWinnerIdx.value = playerIndex;
   lastWinTile.value = winTile;
   settlement.active = false;
+  settlement.winnerIndex = playerIndex;
   gameState.pendingDiHuChoice = null;
   gameState.gamePhase = 'WAITING';
 };
 
 const handleHu = () => {
-  if (!actionState.canHu && !(isMyTurn() && gameState.handTiles.length % 3 === 2)) return;
+  const localSelfHu = isMyTurn() && HuCalculator.checkHu(gameState.handTiles, gameState.wangTile, gameState.diTile, false).canHu;
+  if (!actionState.canHu && !actionState.canSelfHu && !localSelfHu) return;
 
   if (gameMode.value === 'multi') {
     multiAction('hu');
-    actionState.isWaiting = false;
+    clearActionPrompt();
+    actionState.canSelfHu = false;
     return;
   }
 
@@ -2156,6 +2293,7 @@ const handleHu = () => {
 
   executePlayerHu(handToCheck, isSelfDraw, discarderIndex);
   actionState.isWaiting = false;
+  clearSingleInterceptQueue();
 };
 
 // 地胡带拖：用户选择直接胡
@@ -2175,8 +2313,8 @@ const handleDiHuDrag = () => {
 };
 
 const nextTurn = () => {
-  actionState.isWaiting = false;
-  actionState.canChi = actionState.canPeng = actionState.canGang = actionState.canHu = false;
+  clearActionPrompt();
+  actionState.canSelfHu = false;
   gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % 4;
   startTurnTimer();
   const delay = gameMode.value === 'spectate' ? 150 : 500;
@@ -2201,7 +2339,9 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
 }
 
 /* 麻将桌：固定尺寸，通过 transform scale 适配屏幕 */
-.mahjong-desk { position: relative; width: 960px; height: 533px; background-color: #215c32; overflow: hidden; box-shadow: 0 0 30px #000; color: white; border: 4px solid #1a472a; border-radius: 10px; }
+.mahjong-desk { position: relative; width: 960px; height: 533px; background: radial-gradient(ellipse at 50% 42%, #2f8a4d 0%, #237040 45%, #16532c 100%); overflow: hidden; box-shadow: inset 0 0 90px rgba(0,0,0,.45), 0 0 42px rgba(0,0,0,.65); color: white; border: 6px solid #0d3d20; border-radius: 16px; }
+.mahjong-desk::before { content: ''; position: absolute; inset: 9px; border: 2px solid rgba(255,215,0,.16); border-radius: 11px; pointer-events: none; z-index: 0; }
+.mahjong-desk::after { content: ''; position: absolute; left: 50%; top: 50%; width: 320px; height: 320px; transform: translate(-50%,-50%); border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.05) 0%, rgba(0,0,0,.14) 72%); pointer-events: none; z-index: 0; }
 
 /* 准备遮罩层 */
 .ready-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 999; }
@@ -2215,12 +2355,12 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
 .btn-ready:active { transform: scale(0.95); }
 
 /* 模式选择 + 联机大厅 */
-.mode-select-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,60,30,0.92); display: flex; justify-content: center; align-items: center; z-index: 999; }
-.mode-dialog { text-align: center; color: white; position: relative; overflow: hidden; transform: scale(1.1); margin-top: 2%; }
-.mode-dialog h2 { font-size: 36px; margin-bottom: 18px; color: #4CAF50; font-family: 'Microsoft YaHei', '微软雅黑', sans-serif; font-weight: bold; }
-.mode-btn { display: block; width: 260px; margin: 8px auto; padding: 14px; font-size: 18px; font-weight: bold; border: 2px solid #555; border-radius: 16px; cursor: pointer; background: rgba(255,255,255,0.1); color: white; transition: 0.2s; }
-.mode-btn:hover { background: rgba(255,255,255,0.2); border-color: #ffd700; }
-.mode-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.95); }
+.mode-select-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8,44,24,0.94); display: flex; justify-content: center; align-items: center; z-index: 999; }
+.mode-dialog { text-align: center; color: white; position: relative; overflow: hidden; transform: scale(1.06); margin-top: 1%; background: linear-gradient(165deg, rgba(18,70,42,.96), rgba(8,38,22,.98)); border: 2px solid rgba(255,215,0,.35); border-radius: 26px; padding: 26px 48px 18px; box-shadow: 0 22px 60px rgba(0,0,0,.55); }
+.mode-dialog h2 { font-size: 38px; margin-bottom: 18px; color: #ffd700; text-shadow: 0 2px 14px rgba(255,215,0,.35); font-family: 'Microsoft YaHei', '微软雅黑', sans-serif; font-weight: bold; letter-spacing: 4px; }
+.mode-btn { display: block; width: 270px; margin: 9px auto; padding: 14px; font-size: 18px; font-weight: bold; border: 2px solid rgba(255,255,255,.18); border-radius: 18px; cursor: pointer; background: rgba(255,255,255,.08); color: white; transition: 0.2s; letter-spacing: 2px; }
+.mode-btn:hover { background: linear-gradient(145deg, #ffd700, #ffb300); border-color: #ffe066; color: #1a1a1a; box-shadow: 0 6px 20px rgba(255,200,0,.35); transform: translateY(-1px); }
+.mode-btn:active { background: linear-gradient(145deg, #ffe14d, #ffa000); transform: scale(0.96); }
 .mode-btn:disabled { background: rgba(255,255,255,0.03); border-color: #333; color: #555; cursor: not-allowed; }
 
 /* 移动端主菜单：竖屏大字大按钮 */
@@ -2231,6 +2371,8 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
   .mode-dialog {
     transform: none;
     padding: 20px;
+    max-height: 92dvh;
+    overflow-y: auto;
   }
   .mode-dialog h2 {
     font-size: 48px;
@@ -2303,8 +2445,8 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
   .info-close { top: 20px; right: 16px; width: 44px; height: 44px; font-size: 26px; }
 }
 
-.lobby-dialog { text-align: center; color: white; padding: 20px; }
-.lobby-dialog h2 { font-size: 22px; margin-bottom: 18px; color: #ffd700; font-family: 'Microsoft YaHei', '微软雅黑', sans-serif; font-weight: bold; }
+.lobby-dialog { text-align: center; color: white; padding: 26px 36px; background: linear-gradient(165deg, rgba(24,28,52,.95), rgba(10,12,28,.97)); border: 2px solid rgba(255,215,0,.3); border-radius: 22px; box-shadow: 0 18px 50px rgba(0,0,0,.55); }
+.lobby-dialog h2 { font-size: 24px; margin-bottom: 18px; color: #ffd700; font-family: 'Microsoft YaHei', '微软雅黑', sans-serif; font-weight: bold; letter-spacing: 2px; }
 .lobby-input { display: block; width: 220px; margin: 10px auto; padding: 10px 14px; font-size: 16px; border: 2px solid #555; border-radius: 10px; background: rgba(255,255,255,0.1); color: white; text-align: center; outline: none; }
 .lobby-input:focus { border-color: #ffd700; }
 .lobby-input.room-code { font-size: 24px; letter-spacing: 8px; text-transform: uppercase; }
@@ -2319,9 +2461,10 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
 .memory-popup { position: absolute; right: calc(100% + 8px); top: 0; background: #1a1a2e; border: 1px solid #444; border-radius: 8px; padding: 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 155px; z-index: 99; }
 .memory-chip { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #ddd; font-size: 13px; padding: 5px 10px; cursor: pointer; transition: all 0.15s; white-space: nowrap; text-align: center; }
 .memory-chip:hover { background: #ffd700; color: #1a1a2e; border-color: #ffd700; }
-.lobby-btn { display: block; width: 250px; margin: 10px auto; padding: 12px; font-size: 16px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; color: white; transition: 0.2s; }
+.lobby-btn { display: block; width: 250px; margin: 10px auto; padding: 12px; font-size: 16px; font-weight: bold; border: none; border-radius: 14px; cursor: pointer; color: white; transition: 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,.3); }
 .lobby-btn.create { background: linear-gradient(145deg, #4CAF50, #2E7D32); }
 .lobby-btn.join { background: linear-gradient(145deg, #2196F3, #1565C0); }
+.lobby-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
 .lobby-btn:disabled { opacity: 0.4; cursor: default; }
 .lobby-divider { margin: 16px 0; color: #888; font-size: 14px; }
 .lobby-error { color: #f44336; margin: 8px 0; font-size: 14px; }
@@ -2345,6 +2488,7 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
 .v-stack { width: 34px; height: 24px; margin: -1px; }
 .stack-bottom { position: absolute; top: 0; left: 0; }
 .stack-top { position: absolute; top: -10px; left: 0; z-index: 2; }
+.stack-bottom, .stack-top { filter: drop-shadow(1px 2px 2px rgba(0,0,0,.4)); }
 .h-bg { width: 24px; height: 34px; }
 .v-bg { width: 34px; height: 24px; }
 
@@ -2358,30 +2502,27 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
 .avatar-img { width: 38px; height: 38px; border-radius: 8px; border: 2px solid #444; background: #fff; }
 .active-glow { opacity: 1; transform: scale(1.05); }
 .active-glow .avatar-img { border-color: #ffd700; box-shadow: 0 0 12px #ffd700; }
-.name { font-size: 11px; margin-top: 1px; text-shadow: 1px 1px 2px #000; line-height: 1.2; }
+.name { font-size: 11px; margin-top: 1px; text-shadow: 1px 1px 2px #000; line-height: 1.2; background: rgba(0,0,0,.4); padding: 1px 6px; border-radius: 8px; max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ting-badge { display: inline-block; background: #ff5722; color: white; font-size: 9px; padding: 0px 3px; border-radius: 6px; margin-left: 2px; vertical-align: middle; font-weight: bold; }
-.score { font-size: 13px; font-weight: bold; margin-top: 0px; text-shadow: 1px 1px 2px #000; line-height: 1.2; }
+.score { font-size: 13px; font-weight: bold; margin-top: 2px; text-shadow: 1px 1px 2px #000; line-height: 1.2; background: rgba(0,0,0,.35); padding: 0 5px; border-radius: 8px; }
 .score-up { color: #4CAF50; }
 .score-down { color: #F44336; }
 
 /* 亮牌展示面板 */
 .showdown-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-.showdown-panel { background: #1a3a1a; border: 3px solid #ffd700; border-radius: 12px; padding: 15px 25px; text-align: center; color: white; max-width: 90%; }
+.showdown-panel { background: linear-gradient(170deg, #1d4a2b, #12351f); border: 3px solid #ffd700; border-radius: 16px; padding: 18px 28px; text-align: center; color: white; max-width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,.55); }
 .showdown-panel h3 { color: #ffd700; margin: 0 0 10px; font-size: 18px; }
 .showdown-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; }
 .showdown-name { font-size: 13px; font-weight: bold; min-width: 40px; }
 .showdown-tiles { display: flex; gap: 2px; flex-wrap: wrap; flex: 1; }
 .showdown-tile-wrapper { position: relative; width: 22px; height: 32px; display: inline-block; margin-right: 1px; }
-.showdown-tile-bg { position: absolute; top: 0; left: 23px; width: 24px; height: 34px; }
-.showdown-tile-face { position: absolute; top: 1px; left: 25px; width: 20px; height: 30px; }
+.showdown-tile-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+.showdown-tile-face { position: absolute; top: 1px; left: 50%; transform: translateX(-50%); width: 18px; height: 26px; z-index: 2; }
 
 /* showdown 赢家行高亮 */
 .showdown-row.winner-row { background: rgba(255,215,0,0.2); border-radius: 8px; padding: 4px 8px; }
 .showdown-name.winner-name { color: #ffd700; font-weight: bold; text-shadow: 0 0 6px rgba(255,215,0,0.5); }
 
-/* 删掉原来的结算相关样式 */
-.showdown-tile-bg { position: absolute; width: 100%; height: 100%; z-index: 0; transform: translateX(-12px); }
-.showdown-tile-face { position: absolute; top: 1px; left: 85%; transform: translate(-35%); width: 19px; height: 26px; z-index: 2; }
 .showdown-score { font-size: 14px; font-weight: bold; min-width: 45px; text-align: right; }
 .showdown-round { font-size: 13px; margin: 8px 0; color: #aaa; }
 
@@ -2429,7 +2570,8 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
 
 .hand-tile-wrapper { position: relative; width: 44px; height: 64px; cursor: pointer; transition: 0.2s; margin-left: 0.5px; }
 .hand-tile-wrapper:first-child { margin-left: 0; }
-.hand-tile-wrapper.selected { transform: translateY(-15px); }
+.hand-tile-wrapper:hover { transform: translateY(-4px); }
+.hand-tile-wrapper.selected { transform: translateY(-15px); filter: drop-shadow(0 0 7px rgba(255,215,0,.85)); }
 .hand-tile-wrapper.dragging { opacity: 0.4; transform: scale(0.9); }
 .hand-tile-wrapper.drag-over { border-left: 3px solid #ffd700; }
 .new-drawn-tile { margin-left: 12px !important; }
@@ -2461,7 +2603,8 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
 /* 动作按钮 */
 .action-buttons { position: absolute; bottom: 85px; right: 10%; display: flex; gap: 5px; z-index: 100; }
 .action-btn { width: 44px; height: 44px; border-radius: 50%; background: #555; border: 2px solid #333; color: #aaa; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; transition: 0.3s; cursor: pointer; -webkit-appearance: none; padding: 0; outline: none; }
-.action-btn.active { background: linear-gradient(145deg, #ffcc00, #ff9900); border-color: #fff; color: #fff; cursor: pointer; box-shadow: 0 4px 10px rgba(255,215,0,0.5); }
+.action-btn.active { background: linear-gradient(145deg, #ffcc00, #ff9900); border-color: #fff; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(255,215,0,.55), inset 0 0 0 1px rgba(255,255,255,.25); }
+.action-btn.active:hover { transform: scale(1.08); filter: brightness(1.05); }
 .action-btn.active:active { transform: scale(0.9); }
 .action-btn.pass.active { background: linear-gradient(145deg, #66bb6a, #43a047); }
 .action-btn.tuo { background: #444; border-color: #666; color: #aaa; }
@@ -2469,7 +2612,7 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
 
 /* 中央区域：骰子+弃牌池 — 调 top 的百分比整体上下移动 */
 .center-area { position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); width: 340px; height: 230px; z-index: 2; }
-.dice-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border: 2px solid rgba(255, 215, 0, 0.6); border-radius: 50%; display: flex; justify-content: center; align-items: center; gap: 4px; background: rgba(0,0,0,0.4); z-index: 10; }
+.dice-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border: 2px solid rgba(255, 215, 0, 0.6); border-radius: 50%; display: flex; justify-content: center; align-items: center; gap: 4px; background: rgba(0,0,0,0.4); z-index: 10; box-shadow: 0 0 18px rgba(255,215,0,.25), inset 0 0 12px rgba(0,0,0,.4); }
 .dice { width: 18px; height: 18px; }
 
 /* 扎鸟展示 */
@@ -2561,25 +2704,13 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
 .net-bar:nth-child(1) { height: 5px; } .net-bar:nth-child(2) { height: 9px; }
 .net-bar:nth-child(3) { height: 13px; } .net-bar:nth-child(4) { height: 17px; }
 .net-bar.active { background: #4CAF50; }
-/* 首页：BGM按钮居中略偏左，不挡"桃"字 */
-.top-controls { position: absolute; top: 10px; right: 100px; z-index: 99999; display: flex; gap: 3px; }
-
-/* 左上角刷新按钮 */
-.refresh-btn { position: absolute; top: 8px; left: 12px; z-index: 99999; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #aaa; font-size: 18px; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.refresh-btn:hover { background: rgba(0,0,0,0.6); color: #ffd700; border-color: #ffd700; }
-
-/* 网络信号 */
-.net-signal { position: absolute; top: 14px; left: 48px; z-index: 99999; display: flex; align-items: flex-end; gap: 2px; height: 18px; }
-.net-bar { width: 4px; border-radius: 1px; background: #333; transition: background 0.3s; }
-.net-bar:nth-child(1) { height: 5px; } .net-bar:nth-child(2) { height: 9px; }
-.net-bar:nth-child(3) { height: 13px; } .net-bar:nth-child(4) { height: 17px; }
-.net-bar.active { background: #4CAF50; }
 .ctrl-btn { background: rgba(0,0,0,0.4); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 2px 6px; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 2px; }
 .ctrl-btn:hover { background: rgba(0,0,0,0.7); }
 
-/* 手机首页：隐藏绿色游戏框 */
+/* 手机竖屏首页：菜单铺满屏幕（避免 960px 固定宽度被裁切） */
 @media screen and (max-width: 1024px) and (orientation: portrait) {
-  .mahjong-desk.in-menu { background-color: transparent; border-color: transparent; box-shadow: none; }
+  .mahjong-desk.in-menu { width: 100vw; height: 100dvh; background: radial-gradient(ellipse at center, rgba(30,92,54,.96), rgba(8,40,22,.99)); border: none; border-radius: 0; box-shadow: none; }
+  .mahjong-desk.in-menu::before, .mahjong-desk.in-menu::after { display: none; }
 }
 /* 麦克风按钮 + 音量条 */
 .mic-btn { flex-direction: column; gap: 1px; min-width: 28px; }
@@ -2598,7 +2729,7 @@ input, button, .clickable, .action-btn.active, .emoji-option { cursor: pointer; 
 .danmaku-item { position: absolute; white-space: nowrap; font-size: 16px; font-weight: bold; color: #fff; text-shadow: 0 0 4px #000, 0 0 8px #000; animation: danmakuScroll linear forwards; left: 0; transform: translateX(-100%); }
 .danmaku-name { color: #ffd700; margin-right: 4px; }
 .danmaku-text { color: #fff; }
-@keyframes danmakuScroll { from { transform: translateX(-100%); } to { transform: translateX(110vw); } }
+@keyframes danmakuScroll { from { transform: translateX(-100%); } to { transform: translateX(1200px); } }
 
 /* ===== 聊天输入栏 ===== */
 .chat-input-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 99999; background: rgba(0,0,0,0.9); padding: 10px 12px; display: flex; gap: 8px; align-items: center; }

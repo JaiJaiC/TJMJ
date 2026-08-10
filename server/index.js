@@ -70,7 +70,8 @@ wss.on('connection', (ws) => {
         rooms.set(roomId, room);
         myPlayerIndex = room.addPlayer(ws, msg.name || '玩家', msg.avatar || '1.表情包');
         myRoom = room;
-        ws.send(JSON.stringify({ type: 'room_created', roomId, playerIndex: myPlayerIndex }));
+        const reconnectToken = room.players[myPlayerIndex]?.reconnectToken;
+        ws.send(JSON.stringify({ type: 'room_created', roomId, playerIndex: myPlayerIndex, reconnectToken }));
         broadcastRoomPlayers(room);
         break;
       }
@@ -79,6 +80,20 @@ wss.on('connection', (ws) => {
         const roomId = msg.roomId?.toUpperCase?.() || msg.roomId;
         console.log(`[服务器] 玩家加入房间 ${roomId}, 当前在线 ${rooms.has(roomId) ? rooms.get(roomId).players.length : 0}/4`);
         let room = rooms.get(roomId);
+
+        // 断线重连：凭 token 找回原座位（对局/结算中也能恢复，不重新发牌）
+        if (msg.reconnectToken && room && room.state !== 'LOBBY') {
+          const resumedIndex = room.reconnectPlayer(ws, msg.reconnectToken);
+          if (resumedIndex >= 0) {
+            myPlayerIndex = resumedIndex;
+            myRoom = room;
+            ws.send(JSON.stringify({ type: 'room_joined', roomId: room.id, playerIndex: resumedIndex, reconnectToken: msg.reconnectToken }));
+            room.resumePlayer(resumedIndex);
+            broadcastRoomPlayers(room);
+            break;
+          }
+        }
+
         // 测试房间 8888：如果状态不对，自动重建
         if (roomId === '8888' && room && room.state !== 'LOBBY') {
           rooms.delete('8888');
@@ -97,7 +112,8 @@ wss.on('connection', (ws) => {
         myPlayerIndex = room.addPlayer(ws, msg.name || '玩家', msg.avatar || '1.表情包');
         myRoom = room;
         console.log(`[服务器] 房间 ${roomId} 现有 ${room.players.length}/4 人`);
-        ws.send(JSON.stringify({ type: 'room_joined', roomId: room.id, playerIndex: myPlayerIndex }));
+        const reconnectToken = room.players[myPlayerIndex]?.reconnectToken;
+        ws.send(JSON.stringify({ type: 'room_joined', roomId: room.id, playerIndex: myPlayerIndex, reconnectToken }));
         broadcastRoomPlayers(room);
 
         // 人满自动开局
@@ -244,8 +260,9 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     if (myRoom) {
-      myRoom.removePlayer(ws);
-      broadcastRoomPlayers(myRoom);
+      myRoom.removeConnection(ws);
+      if (rooms.has(myRoom.id)) broadcastRoomPlayers(myRoom);
+      myRoom = null;
     }
   });
 });

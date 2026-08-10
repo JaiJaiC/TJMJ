@@ -71,6 +71,8 @@ export class NpcStrategy {
    * 检查给定的手牌是否听牌
    */
   isHandTing(hand) {
+    if (hand.length % 3 !== 1) return false;
+
     const suits = [1, 2, 3];
     for (let suit of suits) {
       for (let num = 1; num <= 9; num++) {
@@ -79,6 +81,24 @@ export class NpcStrategy {
           return true;
         }
       }
+    }
+    return false;
+  }
+
+  /**
+   * 吃碰后需要先打出一张牌，再判断剩余手牌是否听牌。
+   */
+  canTingAfterDiscard(hand) {
+    if (hand.length % 3 !== 2) return false;
+
+    const checkedTiles = new Set();
+    for (let i = 0; i < hand.length; i++) {
+      if (checkedTiles.has(hand[i])) continue;
+      checkedTiles.add(hand[i]);
+
+      const remaining = [...hand];
+      remaining.splice(i, 1);
+      if (this.isHandTing(remaining)) return true;
     }
     return false;
   }
@@ -180,8 +200,8 @@ export class NpcStrategy {
       }
       // chi后手牌减少2张（因为combo是手里的2张），加上副露
 
-      // 检查剩余手牌是否听牌
-      if (this.isHandTing(simulatedHand)) {
+      // 吃牌后仍需出一张；优先选择出牌后能立即听牌的组合。
+      if (this.canTingAfterDiscard(simulatedHand)) {
         return combo; // 吃后听牌，直接选
       }
 
@@ -207,8 +227,8 @@ export class NpcStrategy {
       if (idx !== -1) simulatedHand.splice(idx, 1);
     }
 
-    // 碰后听牌 → 一定碰
-    if (this.isHandTing(simulatedHand)) return true;
+    // 碰牌后仍需出一张；若出牌后能听则一定碰。
+    if (this.canTingAfterDiscard(simulatedHand)) return true;
 
     // 碰后手牌接近听牌（≤4张） → 碰
     if (simulatedHand.length <= 4) return true;

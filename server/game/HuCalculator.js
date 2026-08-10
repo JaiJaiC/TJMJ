@@ -24,16 +24,29 @@ export class HuCalculator {
     normalTiles.sort((a, b) => a - b);
 
     const hasWang = wangCount > 0;
-    // 核心规则：有癞子不能抓炮（只能自摸），无癞子可以抓炮
-    const canCatchCannon = !hasWang;
-    const baseFields = { hasWang, canCatchCannon, canDrag: false };
+    // 基础规则：普通平胡有王不能抓炮；部分门子胡法按规则允许“有王抓炮”。
+    const baseFields = { hasWang, canCatchCannon: !hasWang, canDrag: false };
+    const canCatchWithWangTypes = new Set(["碰碰胡", "清一色", "七小对", "将将胡"]);
+    const makeHu = (type, score, extra = {}) => ({
+      canHu: true,
+      type,
+      score,
+      ...baseFields,
+      canCatchCannon: !hasWang || canCatchWithWangTypes.has(type),
+      ...extra,
+    });
+
+    // 吃碰后的手牌也可能少于 14 张，但胡牌手牌始终应为 3n+2。
+    if (handTiles.length % 3 !== 2) {
+      return { canHu: false, type: "", score: 0, ...baseFields };
+    }
 
     // 1. 拦截黑天胡 (首轮、14张、无王、无258、无一句话)
     if (isFirstTurn && handTiles.length === 14 && wangCount === 0) {
        let hasJiang = handTiles.some(t => is258(t));
        let hasSentence = this.hasAnySentence(handTiles);
        if (!hasJiang && !hasSentence) {
-          return { canHu: true, type: "黑天胡", score: 6, ...baseFields };
+          return makeHu("黑天胡", 6);
        }
     }
 
@@ -61,23 +74,25 @@ export class HuCalculator {
     let isQingYiSe = new Set(normalTiles.map(t => Math.floor(t / 10))).size === 1;
 
     // 顶级胡法优先判定
-    if (wangCount === 4) return { canHu: true, type: "天天胡", score: 15, ...baseFields };
-    if (wangCount === 3) return { canHu: true, type: "天胡", score: 9, ...baseFields };
-    if (diCount === 3) return { canHu: true, type: "地胡", score: 6, canDrag: true, ...baseFields };
+    if (wangCount === 4) return makeHu("天天胡", 15);
+    if (wangCount === 3) return makeHu("天胡", 9);
+    if (diCount === 3) return makeHu("地胡", 6, { canDrag: true });
 
     // 门子胡法判定
-    if (isJiangJiang) return { canHu: true, type: "将将胡", score: 6, ...baseFields };
-    if (isQingYiSe) return { canHu: true, type: "清一色", score: 6, ...baseFields };
-    if (is7Pairs) return { canHu: true, type: "七小对", score: 6, ...baseFields };
-    if (isPengPeng) return { canHu: true, type: "碰碰胡", score: 6, ...baseFields };
+    if (isJiangJiang) return makeHu("将将胡", 6);
+    if (isQingYiSe) return makeHu("清一色", 6);
+    if (is7Pairs) return makeHu("七小对", 6);
+    if (isPengPeng) return makeHu("碰碰胡", 6);
 
     // 基础胡法判定
-    if (!hasWang) return { canHu: true, type: "硬庄", score: 6, ...baseFields };
-    return { canHu: true, type: "平胡", score: 3, ...baseFields };
+    if (!hasWang) return makeHu("硬庄", 6);
+    return makeHu("平胡", 3);
   }
 
   // 常规胡法检测
   static checkNormalHu(normalTiles, wangCount) {
+    let normalHuResult = null;
+
     for (let i = 0; i < normalTiles.length; i++) {
       let tile = normalTiles[i];
       if (is258(tile)) { // 必须 258 作将
@@ -86,28 +101,39 @@ export class HuCalculator {
           let temp = [...normalTiles];
           temp.splice(i, 2);
           let res = this.checkSentences(temp, wangCount);
-          if (res.canHu) return res;
+          if (res.canHu) {
+            if (res.isPengPeng) return res;
+            normalHuResult ??= res;
+          }
         }
         // 用王凑将
         if (wangCount >= 1) {
           let temp = [...normalTiles];
           temp.splice(i, 1);
           let res = this.checkSentences(temp, wangCount - 1);
-          if (res.canHu) return res;
+          if (res.canHu) {
+            if (res.isPengPeng) return res;
+            normalHuResult ??= res;
+          }
         }
       }
     }
     // 全靠王凑将
     if (wangCount >= 2) {
        let res = this.checkSentences([...normalTiles], wangCount - 2);
-       if (res.canHu) return res;
+       if (res.canHu) {
+         if (res.isPengPeng) return res;
+         normalHuResult ??= res;
+       }
     }
-    return { canHu: false };
+    return normalHuResult ?? { canHu: false };
   }
 
   // 递归检查是否能全凑成顺子或刻子
   static checkSentences(tiles, wangCount, isPengPeng = true) {
-    if (tiles.length === 0) return { canHu: true, isPengPeng };
+    if (tiles.length === 0) {
+      return { canHu: wangCount % 3 === 0, isPengPeng };
+    }
     let firstTile = tiles[0];
     let count = tiles.filter(t => t === firstTile).length;
 
@@ -129,25 +155,27 @@ export class HuCalculator {
       if (res.canHu) return res;
     }
 
-    // 试着凑顺子 (ABC) -> 此时就不是碰碰胡了
-    let idx2 = tiles.indexOf(firstTile + 1);
-    let idx3 = tiles.indexOf(firstTile + 2);
-    if (idx2 !== -1 && idx3 !== -1) {
-      let newTiles = tiles.slice();
-      newTiles.splice(idx3, 1); newTiles.splice(idx2, 1); newTiles.splice(0, 1);
-      let res = this.checkSentences(newTiles, wangCount, false);
-      if (res.canHu) return res;
-    } else if ((idx2 !== -1 || idx3 !== -1) && wangCount >= 1) {
-      let newTiles = tiles.slice();
-      if (idx2 !== -1) newTiles.splice(idx2, 1); else newTiles.splice(idx3, 1);
+    // 最小实牌通常是顺子起点；8、9 则需要让王补在它前面。
+    // 将顺子窗口限制在同一花色的 1-9，避免把 19、21 等跨花色牌拼在一起。
+    const value = firstTile % 10;
+    if (value >= 1 && value <= 9) {
+      const sequenceStart = firstTile - Math.max(0, value - 7);
+      const companions = [sequenceStart, sequenceStart + 1, sequenceStart + 2]
+        .filter(tile => tile !== firstTile);
+      const newTiles = tiles.slice();
       newTiles.splice(0, 1);
-      let res = this.checkSentences(newTiles, wangCount - 1, false);
-      if (res.canHu) return res;
-    } else if (wangCount >= 2) {
-      let newTiles = tiles.slice();
-      newTiles.splice(0, 1);
-      let res = this.checkSentences(newTiles, wangCount - 2, false);
-      if (res.canHu) return res;
+
+      let missingCount = 0;
+      for (const tile of companions) {
+        const index = newTiles.indexOf(tile);
+        if (index === -1) missingCount++;
+        else newTiles.splice(index, 1);
+      }
+
+      if (missingCount <= wangCount) {
+        const res = this.checkSentences(newTiles, wangCount - missingCount, false);
+        if (res.canHu) return res;
+      }
     }
 
     return { canHu: false };
@@ -169,7 +197,7 @@ export class HuCalculator {
      let unique = [...new Set(tiles)];
      for (let t of unique) {
         if (tiles.filter(x => x === t).length >= 3) return true;
-        if (tiles.includes(t+1) && tiles.includes(t+2)) return true;
+        if (t % 10 <= 7 && tiles.includes(t+1) && tiles.includes(t+2)) return true;
      }
      return false;
   }
