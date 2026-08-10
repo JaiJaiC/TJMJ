@@ -1,5 +1,5 @@
 // server/GameRoom.js — 多人房间状态机
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { initTiles, determineDealPosition } from './game/mjLogic.js';
 import { calculateWang, is258 } from './game/constants.js';
 import { HuCalculator } from './game/HuCalculator.js';
@@ -31,12 +31,13 @@ export class GameRoom {
     this.lastDiscard = null;      // { tile, fromPlayer }
     this.pendingActions = null;   // { actions: {...}, deadline }
     this.winTile = null;          // 胡的那张牌（用于亮牌展示）
-    this.actionResponded = 0;
-    this.actionResults = [];
+    this.startTimer = null;
+    this.turnTimer = null;
+    this.lastRoundResult = null;
   }
 
   addObserver(ws) {
-    this.observers.push(ws);
+    if (!this.observers.includes(ws)) this.observers.push(ws);
     console.log(`[服务器] 观战者加入房间 ${this.id}`);
     // 立刻发送当前状态
     const obsMsg = this.buildObserverState();
@@ -54,7 +55,7 @@ export class GameRoom {
       wangTile: this.wangTile,
       dice: this.dice,
       deckRemaining: this.deckRemaining,
-      wallTiles: this.wallTiles,
+      wallTiles: this.publicWallTiles(),
       tileCounts: this.hands.map(h => h.length),
       hands: this.hands.map(h => [...h]),
       scores: this.players.map(p => p.score),
@@ -62,40 +63,147 @@ export class GameRoom {
     };
   }
 
+  // 观战者视角的牌墙：隐藏牌面数值，只保留“是否还有牌”的空位信息
+  publicWallTiles() {
+    return this.wallTiles.map(tile => (tile == null ? null : 1));
+  }
+
   addPlayer(ws, name, avatar) {
-    if (this.players.length >= 4) return -1;
-    const idx = this.players.length;
+    let idx = this.players.findIndex(player => !player.connected && this.state === 'LOBBY');
+    if (idx === -1) {
+      if (this.players.length >= 4) return -1;
+      idx = this.players.length;
+    }
     const player = {
       id: idx,
       ws, name, avatar,
       score: 0,
       ready: false,
       connected: true,
+      reconnectToken: randomUUID(),
     };
-    this.players.push(player);
+    if (idx === this.players.length) this.players.push(player);
+    else this.players[idx] = player;
     return idx; // 返回座位号 0/1/2/3
   }
 
-  removePlayer(ws) {
+  reconnectPlayer(ws, reconnectToken) {
+    const idx = this.players.findIndex(player => player.reconnectToken === reconnectToken);
+    if (idx < 0) return -1;
+
+    const player = this.players[idx];
+    const previousSocket = player.ws;
+    player.ws = ws;
+    player.connected = true;
+    if (previousSocket && previousSocket !== ws && previousSocket.readyState === 1) {
+      try { previousSocket.close(4001, 'Reconnected from another socket'); } catch (error) {}
+    }
+    return idx;
+  }
+
+  // 断线重连：恢复座位并下发当前完整状态
+  resumePlayer(playerIndex) {
+    const p = this.players[playerIndex];
+    if (!p) return false;
+    p.connected = true;
+    this.clearTurnTimer();
+
+    const msg = {
+      type: 'resume_state',
+      state: this.state,
+      hand: [...this.hands[playerIndex]],
+      wangTile: this.wangTile,
+      diTile: this.diTile,
+      diIndex: this.diIndex,
+      dice: this.dice,
+      currentPlayer: this.currentPlayerIndex,
+      roundNumber: this.roundNumber,
+      dealerIndex: this.dealerIndex,
+      tileCounts: this.hands.map(h => h.length),
+      discards: this.discards,
+      exposed: this.exposed,
+      wallTiles: this.wallTiles,
+      deckRemaining: this.deckRemaining,
+      players: this.playersInfo(),
+      totalScores: this.totalScores,
+      pendingActions: !!this.pendingActions,
+    };
+    if (this.state === 'SETTLEMENT' && this.lastRoundResult) {
+      msg.roundResult = this.lastRoundResult;
+    }
+    if (this.state === 'PLAYING' && this.currentPlayerIndex === playerIndex && !this.pendingActions) {
+      msg.yourTurn = true;
+      this.scheduleTurnTimeout(playerIndex);
+    }
+    this.sendTo(playerIndex, msg);
+    return true;
+  }
+
+  removeConnection(ws) {
+    const observerCount = this.observers.length;
+    this.observers = this.observers.filter(observer => observer !== ws);
     const idx = this.players.findIndex(p => p.ws === ws);
     if (idx >= 0) {
       this.players[idx].connected = false;
-      // 如果还没开始，直接移除
-      if (this.state === 'LOBBY') {
-        this.players.splice(idx, 1);
+      this.players[idx].ready = false;
+      // 若正好轮到掉线玩家，加速超时避免对局卡死
+      if (this.state === 'PLAYING' && this.currentPlayerIndex === idx && !this.pendingActions) {
+        this.scheduleTurnTimeout(idx);
       }
     }
-    if (this.players.every(p => !p.connected)) {
+    if (this.players.length > 0 && this.players.every(p => !p.connected)) {
+      this.destroy();
       this.onDestroy(this.id);
     }
-    return idx;
+    return { playerIndex: idx, observerRemoved: observerCount !== this.observers.length };
+  }
+
+  cancelStartTimer() {
+    if (this.startTimer) {
+      clearTimeout(this.startTimer);
+      this.startTimer = null;
+    }
+  }
+
+  clearTurnTimer() {
+    if (this.turnTimer) {
+      clearTimeout(this.turnTimer);
+      this.turnTimer = null;
+    }
+  }
+
+  destroy() {
+    this.cancelStartTimer();
+    this.clearTurnTimer();
+    if (this.pendingActions?.timeoutId) clearTimeout(this.pendingActions.timeoutId);
+    this.pendingActions = null;
+  }
+
+  // 回合超时：在线玩家 30 秒未出牌自动随机出牌；掉线玩家 1.5 秒代打，防止对局卡死
+  scheduleTurnTimeout(playerIndex) {
+    this.clearTurnTimer();
+    if (this.state !== 'PLAYING') return;
+    const player = this.players[playerIndex];
+    if (!player) return;
+    const delay = player.connected ? 30000 : 1500;
+    this.turnTimer = setTimeout(() => {
+      this.turnTimer = null;
+      if (this.state !== 'PLAYING') return;
+      if (this.currentPlayerIndex !== playerIndex || this.pendingActions) return;
+      const hand = this.hands[playerIndex] || [];
+      const canDiscard = hand.length % 3 === 2 || hand.length % 3 === 0;
+      if (canDiscard && hand.length > 0) {
+        const idx = Math.floor(Math.random() * hand.length);
+        this.handleDiscard(playerIndex, hand[idx]);
+      }
+    }, delay);
   }
 
   // 广播给所有人
   broadcast(msg) {
     const data = JSON.stringify(msg);
     this.players.forEach(p => {
-      if (p.ws.readyState === 1) p.ws.send(data);
+      if (p?.connected && p.ws?.readyState === 1) p.ws.send(data);
     });
   }
 
@@ -103,7 +211,7 @@ export class GameRoom {
   sendTo(playerIndex, msg) {
     const p = this.players[playerIndex];
     if (!p) { console.log(`[服务器] sendTo(${playerIndex}): 玩家不存在`); return; }
-    if (p.ws.readyState !== 1) { console.log(`[服务器] sendTo(${playerIndex}): ws状态=${p.ws.readyState}`); return; }
+    if (!p.connected || p.ws?.readyState !== 1) { console.log(`[服务器] sendTo(${playerIndex}): 玩家离线`); return; }
     try {
       p.ws.send(JSON.stringify(msg));
     } catch(e) {
@@ -137,15 +245,16 @@ export class GameRoom {
     this.wangTile = calculateWang(this.diTile);
 
     // 发牌
+    const dealer = this.dealerIndex;
     for (let i = 0; i < 53; i++) {
       let tile = this.physicalDraw();
       let player = Math.floor(i / 4) % 4;
       if (i >= 48) player = i - 48;
-      if (i === 52) player = 0;
+      if (i === 52) player = dealer;
       this.hands[player].push(tile);
     }
     // 不排序，保留发牌顺序（玩家可拖拽自定义排列）
-    this.currentPlayerIndex = 0;
+    this.currentPlayerIndex = dealer;
 
     // 通知每个人他的牌和王
     this.players.forEach((_, i) => {
@@ -167,8 +276,9 @@ export class GameRoom {
 
     // 广播公共状态 + 通知庄家出牌
     this.broadcastPublic();
-    this.sendTo(0, { type: 'your_turn', playerIndex: 0 });
-    this.notifySelfHu(0);
+    this.sendTo(dealer, { type: 'your_turn', playerIndex: dealer });
+    this.notifySelfHu(dealer);
+    this.scheduleTurnTimeout(dealer);
   }
 
   notifySelfHu(playerIndex) {
@@ -191,6 +301,7 @@ export class GameRoom {
     console.log(`[服务器] handleDiscard: p${playerIndex} tile=${tile} curP=${this.currentPlayerIndex} pending=${!!this.pendingActions} handLen=${this.hands[playerIndex]?.length}`);
     if (playerIndex !== this.currentPlayerIndex) { console.log('[服务器] 不是你的回合!'); return; }
     if (this.pendingActions) { console.log('[服务器] 有待处理动作!'); return; }
+    this.clearTurnTimer();
 
     const hand = this.hands[playerIndex];
     const idx = hand.indexOf(tile);
@@ -217,6 +328,7 @@ export class GameRoom {
     this.hands[playerIndex].push(tile); // 不排序，保留玩家自定义顺序
     this.sendTo(playerIndex, { type: 'drew_tile', tile });
     this.broadcastPublic();
+    this.scheduleTurnTimeout(playerIndex);
 
     // 自摸检测
     this.notifySelfHu(playerIndex);
@@ -411,6 +523,7 @@ export class GameRoom {
     this.broadcastPublic();
     // 通知碰牌玩家出牌
     this.sendTo(playerIndex, { type: 'your_turn', playerIndex });
+    this.scheduleTurnTimeout(playerIndex);
   }
 
   executeGang(playerIndex, tile) {
@@ -427,6 +540,7 @@ export class GameRoom {
       this.sendTo(playerIndex, { type: 'drew_tile', tile: newTile });
     }
     this.sendTo(playerIndex, { type: 'your_turn', playerIndex });
+    this.scheduleTurnTimeout(playerIndex);
   }
 
   executeChi(playerIndex, tile, combo) {
@@ -449,6 +563,7 @@ export class GameRoom {
     this.broadcastPublic();
     // 通知吃牌玩家出牌
     this.sendTo(playerIndex, { type: 'your_turn', playerIndex });
+    this.scheduleTurnTimeout(playerIndex);
   }
 
   nextTurn() {
@@ -467,10 +582,12 @@ export class GameRoom {
     this.sendTo(cp, { type: 'drew_tile', tile });
     this.broadcastPublic();
     this.notifySelfHu(cp);
+    this.scheduleTurnTimeout(cp);
   }
 
   endRound(winnerIndex) {
     this.state = 'SETTLEMENT';
+    this.clearTurnTimer();
     // 赢家坐庄，流局轮转
     if (winnerIndex >= 0) {
       this.dealerIndex = winnerIndex;
@@ -482,14 +599,17 @@ export class GameRoom {
       this.totalScores[winnerIndex] += 1;
       this.players[winnerIndex].score += 1;
     }
-    this.broadcast({
-      type: 'round_end',
+    this.lastRoundResult = {
       winnerIndex,
-      hands: this.hands,
+      hands: this.hands.map(h => [...h]),
       winTile: this.winTile || null,
-      totalScores: this.totalScores,
+      totalScores: [...this.totalScores],
       roundNumber: this.roundNumber,
       scores: this.players.map(p => p.score),
+    };
+    this.broadcast({
+      type: 'round_end',
+      ...this.lastRoundResult,
     });
     // 等待玩家点击"继续"（不再自动开始）
   }
